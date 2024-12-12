@@ -5,6 +5,7 @@ import 'package:rocket_chat_flutter_client/models/authentication.dart';
 import 'package:rocket_chat_flutter_client/models/media_metadata.dart';
 import 'package:rocket_chat_flutter_client/models/message.dart';
 import 'package:rocket_chat_flutter_client/models/message_attachment.dart';
+import 'package:rocket_chat_flutter_client/models/new/room_new.dart';
 import 'package:rocket_chat_flutter_client/models/room.dart';
 import 'package:rocket_chat_flutter_client/models/room_change.dart';
 import 'package:rocket_chat_flutter_client/models/subscription_update.dart';
@@ -13,6 +14,7 @@ import 'package:rocket_chat_flutter_client/models/user.dart';
 import 'package:rocket_chat_flutter_client/services/authentication_service.dart';
 import 'package:rocket_chat_flutter_client/services/http_service.dart';
 import 'package:rocket_chat_flutter_client/services/message_service.dart';
+import 'package:rocket_chat_flutter_client/services/room_service.dart';
 import 'package:rocket_chat_flutter_client/web_socket/web_socket_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -34,6 +36,7 @@ class RocketChatFlutterClient {
   Authentication? auth;
   late AuthenticationService authService;
   late MessageService messageService;
+  late RoomService roomService;
   late WebSocketChannel webSocketChannel;
   final WebSocketService webSocketService = WebSocketService();
   final Map<String, StreamController<List<Message>>> _roomMessages = {};
@@ -47,28 +50,31 @@ class RocketChatFlutterClient {
   Timer? _reconnectTimer;
   static const int _maxReconnectAttempts = 5;
   int _reconnectAttempts = 0;
-  
+
   // Add reconnection method
   Future<void> _reconnect() async {
     if (_isConnected || _reconnectAttempts >= _maxReconnectAttempts) return;
 
     try {
       _reconnectAttempts++;
-      print('Attempting to reconnect (${_reconnectAttempts}/$_maxReconnectAttempts)...');
-      
+      print(
+          'Attempting to reconnect (${_reconnectAttempts}/$_maxReconnectAttempts)...');
+
       // connect to the websocket.
-      webSocketChannel = webSocketService.connectToWebSocket(webSocketUrl, auth!);
-      
+      webSocketChannel =
+          webSocketService.connectToWebSocket(webSocketUrl, auth!);
+
       // subscribe to the user.
       // for :rooms-changed
       //     :message
       //     :notification
       webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!);
-      
+
       // listen to the websocket messages.
       webSocketChannel.stream.listen(
         (message) => _handleWebSocketMessage(message),
-        onError: (error, stackTrace) => _handleWebSocketError(error, stackTrace),
+        onError: (error, stackTrace) =>
+            _handleWebSocketError(error, stackTrace),
         onDone: () => _handleWebSocketDone(),
         cancelOnError: false,
       );
@@ -77,7 +83,7 @@ class RocketChatFlutterClient {
       _reconnectAttempts = 0;
       _reconnectTimer?.cancel();
       _reconnectTimer = null;
-      
+
       print('Successfully reconnected to WebSocket');
     } on Exception catch (e, s) {
       _handleError('reconnection', e, s);
@@ -88,10 +94,8 @@ class RocketChatFlutterClient {
   void _scheduleReconnect() {
     _reconnectTimer?.cancel();
     if (_reconnectAttempts < _maxReconnectAttempts) {
-      _reconnectTimer = Timer(
-        Duration(seconds: retryAfter * _reconnectAttempts), 
-        _reconnect
-      );
+      _reconnectTimer =
+          Timer(Duration(seconds: retryAfter * _reconnectAttempts), _reconnect);
     }
   }
 
@@ -129,9 +133,9 @@ class RocketChatFlutterClient {
   ///
   /// Typically called in the main function or initState of a StatefulWidget.
   init() async {
-
     authService = AuthenticationService(HttpService(Uri.parse(serverUrl)));
     messageService = MessageService(HttpService(Uri.parse(serverUrl)));
+    roomService = RoomService(HttpService(Uri.parse(serverUrl)));
     // create the authentication object.
     // this will retry the operation after [retryAfter] typically 3 seconds
     // if the operation fails.
@@ -144,7 +148,8 @@ class RocketChatFlutterClient {
 
     try {
       // connect to the websocket.
-      webSocketChannel = webSocketService.connectToWebSocket(webSocketUrl, auth!);
+      webSocketChannel =
+          webSocketService.connectToWebSocket(webSocketUrl, auth!);
 
       // subscribe to the user.
       // for :rooms-changed
@@ -155,7 +160,8 @@ class RocketChatFlutterClient {
       // listen to the websocket messages.
       webSocketChannel.stream.listen(
         (message) => _handleWebSocketMessage(message),
-        onError: (error, stackTrace) => _handleWebSocketError(error, stackTrace),
+        onError: (error, stackTrace) =>
+            _handleWebSocketError(error, stackTrace),
         onDone: () => _handleWebSocketDone(),
         cancelOnError: false,
       );
@@ -255,6 +261,12 @@ class RocketChatFlutterClient {
     } on Exception catch (e, s) {
       _handleError('_handleWebSocketMessage', e, s);
     }
+  }
+
+  /// Create a direct message room with the user.
+  Future createDirectMessage(String username) async {
+    final room = await roomService.create(RoomNew(), auth!);
+    return room;
   }
 
   /// Get the messages stream for a room.
