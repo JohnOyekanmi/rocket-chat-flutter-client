@@ -142,3 +142,12 @@ class MessageAttachment {
       ts.hashCode ^
       videoUrl.hashCode;
 }
+
+
+enum MediaType {
+  audio,
+  image,
+  video,
+  // only the three above are supported by the server for now.
+  // file,
+}

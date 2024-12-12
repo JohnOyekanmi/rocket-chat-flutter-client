@@ -13,6 +13,17 @@ class Authentication {
     }
   }
 
+  Authentication copyWith({User? me, String? status}) {
+    return Authentication(
+      status: status ?? this.status,
+      data: _Data(
+        authToken: data?.authToken,
+        userId: data?.userId,
+        me: me ?? data?.me,
+      ),
+    );
+  }
+
   Map<String, dynamic> toMap() => {
         'status': status,
         'data': data != null ? data!.toMap() : null,
