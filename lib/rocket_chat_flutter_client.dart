@@ -42,6 +42,59 @@ class RocketChatFlutterClient {
 
   bool get _authObjectCreated => auth != null && auth!.data?.me != null;
 
+  // Add these new properties for reconnection handling
+  bool _isConnected = false;
+  Timer? _reconnectTimer;
+  static const int _maxReconnectAttempts = 5;
+  int _reconnectAttempts = 0;
+  
+  // Add reconnection method
+  Future<void> _reconnect() async {
+    if (_isConnected || _reconnectAttempts >= _maxReconnectAttempts) return;
+
+    try {
+      _reconnectAttempts++;
+      print('Attempting to reconnect (${_reconnectAttempts}/$_maxReconnectAttempts)...');
+      
+      // connect to the websocket.
+      webSocketChannel = webSocketService.connectToWebSocket(webSocketUrl, auth!);
+      
+      // subscribe to the user.
+      // for :rooms-changed
+      //     :message
+      //     :notification
+      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!);
+      
+      // listen to the websocket messages.
+      webSocketChannel.stream.listen(
+        (message) => _handleWebSocketMessage(message),
+        onError: (error, stackTrace) => _handleWebSocketError(error, stackTrace),
+        onDone: () => _handleWebSocketDone(),
+        cancelOnError: false,
+      );
+
+      _isConnected = true;
+      _reconnectAttempts = 0;
+      _reconnectTimer?.cancel();
+      _reconnectTimer = null;
+      
+      print('Successfully reconnected to WebSocket');
+    } on Exception catch (e, s) {
+      _handleError('reconnection', e, s);
+      _scheduleReconnect();
+    }
+  }
+
+  void _scheduleReconnect() {
+    _reconnectTimer?.cancel();
+    if (_reconnectAttempts < _maxReconnectAttempts) {
+      _reconnectTimer = Timer(
+        Duration(seconds: retryAfter * _reconnectAttempts), 
+        _reconnect
+      );
+    }
+  }
+
   Future<void> _createAuthObject() async {
     try {
       // create a fake authentication object.
@@ -68,7 +121,15 @@ class RocketChatFlutterClient {
     }
   }
 
+  /// Initialize the client.
+  /// This method will create the authentication object and connect to the websocket.
+  /// It will also subscribe to the user and listen to the websocket messages.
+  /// If the operation fails, it will retry the operation after [retryAfter] typically 3 seconds.
+  /// If the operation fails after [maxReconnectAttempts] attempts, it will stop retrying.
+  ///
+  /// Typically called in the main function or initState of a StatefulWidget.
   init() async {
+
     authService = AuthenticationService(HttpService(Uri.parse(serverUrl)));
     messageService = MessageService(HttpService(Uri.parse(serverUrl)));
     // create the authentication object.
@@ -81,98 +142,118 @@ class RocketChatFlutterClient {
       return;
     }
 
-    // connect to the websocket.
-    final WebSocketChannel webSocketChannel =
-        webSocketService.connectToWebSocket(webSocketUrl, auth!);
+    try {
+      // connect to the websocket.
+      webSocketChannel = webSocketService.connectToWebSocket(webSocketUrl, auth!);
 
-    // subscribe to the user.
-    // for :rooms-changed
-    //     :message
-    //     :notification
-    webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!);
+      // subscribe to the user.
+      // for :rooms-changed
+      //     :message
+      //     :notification
+      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!);
 
-    // listen to the websocket messages.
-    webSocketChannel.stream.listen(
-      (message) => _handleWebSocketMessage(message),
-      onError: (error, stackTrace) => _handleWebSocketError(error, stackTrace),
-      onDone: () => _handleWebSocketDone(),
-      cancelOnError: false,
-    );
+      // listen to the websocket messages.
+      webSocketChannel.stream.listen(
+        (message) => _handleWebSocketMessage(message),
+        onError: (error, stackTrace) => _handleWebSocketError(error, stackTrace),
+        onDone: () => _handleWebSocketDone(),
+        cancelOnError: false,
+      );
+
+      _isConnected = true;
+      _reconnectAttempts = 0;
+    } on Exception catch (e, s) {
+      _handleError('initialization', e, s);
+      _scheduleReconnect();
+    }
+  }
+
+  void _handleError(String operation, Exception e, StackTrace s) {
+    print('Error during $operation: $e');
+    print('Stack trace: $s');
   }
 
   void _handleWebSocketError(Object error, StackTrace stackTrace) {
+    _isConnected = false;
     print('WebSocket error: $error');
     print('Stack trace: $stackTrace');
+    _scheduleReconnect();
   }
 
   void _handleWebSocketDone() {
     print('WebSocket connection closed!');
+    _isConnected = false;
+    _scheduleReconnect();
   }
 
   void _handleWebSocketMessage(Map<String, dynamic> message) {
-    print('WebSocket message: ${message['msg']}');
+    try {
+      print('WebSocket message: ${message['msg']}');
 
-    // handle keep alive messages.
-    if (message['msg'] == 'ping') {
-      print('Keep alive!');
-      webSocketService.sendPong(webSocketChannel);
-    }
+      // handle keep alive messages.
+      if (message['msg'] == 'ping') {
+        print('Keep alive!');
+        webSocketService.sendPong(webSocketChannel);
+      }
 
-    // // handle subscription messages.
-    // if (message['msg'] == 'sub') {
-    //   print('Subscription message: ${message['name']}');
-    // }
+      // // handle subscription messages.
+      // if (message['msg'] == 'sub') {
+      //   print('Subscription message: ${message['name']}');
+      // }
 
-    if (message['msg'] == 'changed') {
-      //handle changes and updates in the room.
+      if (message['msg'] == 'changed') {
+        //handle changes and updates in the room.
 
-      // STREAM-NOTIFY-USER
-      if (message['collection'] == 'stream-notify-user') {
-        print('collection: is ${message['collection']}');
+        // STREAM-NOTIFY-USER
+        if (message['collection'] == 'stream-notify-user') {
+          print('collection: is ${message['collection']}');
 
-        // ---> rooms list changes.
-        if (message['fields']['eventName'].endsWith('rooms-changed')) {
-          print('rooms list change detected!');
+          // ---> rooms list changes.
+          if (message['fields']['eventName'].endsWith('rooms-changed')) {
+            print('rooms list change detected!');
 
-          final changeType = getRoomChangeType(message['fields']['args'][0]);
-          final value = message['fields']['args'][1];
+            final changeType = getRoomChangeType(message['fields']['args'][0]);
+            final value = message['fields']['args'][1];
 
-          final roomChange = RoomChange(
-            changeType,
-            SubscriptionUpdate.fromMap(value),
-          );
+            final roomChange = RoomChange(
+              changeType,
+              SubscriptionUpdate.fromMap(value),
+            );
 
-          _rooms.add(roomChange);
+            _rooms.add(roomChange);
+          }
+        }
+
+        // STREAM-NOTIFY-ROOM
+        if (message['collection'] == 'stream-notify-room') {
+          print('collection: is ${message['collection']}');
+
+          // ---> typing
+          if (message['fields']['eventName'].endsWith('typing')) {
+            print('typing detected!');
+
+            // extract the room id from the event name.
+            final roomId = message['fields']['eventName'].split('/')[0];
+            final value = message['fields']['args'];
+
+            _roomTypings[roomId]?.add(Typing.fromList(value));
+          }
+        }
+
+        // STREAM-ROOM-MESSAGES
+        if (message['collection'] == 'stream-room-messages') {
+          print('collection: is ${message['collection']}');
+
+          // ---> message
+          final roomId = message['fields']['eventName'];
+          final List<Map<String, dynamic>> value = message['fields']['args'];
+
+          _roomMessages[roomId]
+              ?.add(value.map((m) => Message.fromMap(m)).toList());
         }
       }
-
-      // STREAM-NOTIFY-ROOM
-      if (message['collection'] == 'stream-notify-room') {
-        print('collection: is ${message['collection']}');
-
-        // ---> typing
-        if (message['fields']['eventName'].endsWith('typing')) {
-          print('typing detected!');
-
-          // extract the room id from the event name.
-          final roomId = message['fields']['eventName'].split('/')[0];
-          final value = message['fields']['args'];
-
-          _roomTypings[roomId]?.add(Typing.fromList(value));
-        }
-      }
-
-      // STREAM-ROOM-MESSAGES
-      if (message['collection'] == 'stream-room-messages') {
-        print('collection: is ${message['collection']}');
-
-        // ---> message
-        final roomId = message['fields']['eventName'];
-        final List<Map<String, dynamic>> value = message['fields']['args'];
-
-        _roomMessages[roomId]
-            ?.add(value.map((m) => Message.fromMap(m)).toList());
-      }
+    } on Exception catch (e, s) {
+      _handleError('_handleWebSocketMessage', e, s);
     }
   }
 
@@ -225,16 +306,24 @@ class RocketChatFlutterClient {
       final attachments = <MessageAttachment>[];
 
       for (var mediaFile in mediaFiles) {
-        // 1. upload the audio file to the server and get the media metadata.
-        final mediaMetadata = await messageService.uploadMedia(
-          mediaFile,
-          message,
-          room.id!,
-          auth!,
-          serverUrl,
-        );
+        try {
+          // 1. upload the audio file to the server and get the media metadata.
+          final mediaMetadata = await messageService.uploadMedia(
+            mediaFile,
+            message,
+            room.id!,
+            auth!,
+            serverUrl,
+          );
+          mediaMetadataList.add(mediaMetadata);
+        } on Exception catch (e, s) {
+          _handleError('media upload', e, s);
+          continue; // Skip this file but continue with others
+        }
+      }
 
-        mediaMetadataList.add(mediaMetadata);
+      if (mediaMetadataList.isEmpty) {
+        throw Exception('No media files were successfully uploaded');
       }
 
       for (var mediaMetadata in mediaMetadataList) {
@@ -244,7 +333,6 @@ class RocketChatFlutterClient {
           imageUrl: mediaType == MediaType.image ? mediaMetadata.url : null,
           videoUrl: mediaType == MediaType.video ? mediaMetadata.url : null,
         );
-
         attachments.add(attachment);
       }
 
@@ -256,10 +344,8 @@ class RocketChatFlutterClient {
         room,
       );
     } on Exception catch (e, s) {
-      print('Error sending media message: $e');
-      print('Stack trace: $s');
-
-      // TODO: add proper error handling.
+      _handleError('media message sending', e, s);
+      rethrow;
     }
   }
 
@@ -281,4 +367,13 @@ class RocketChatFlutterClient {
   // void sendPresence(Room room, String userId) {
   //   webSocketService.sendUserPresence(webSocketChannel);
   // }
+
+  // Add cleanup method
+  void dispose() {
+    _reconnectTimer?.cancel();
+    webSocketChannel.sink.close();
+    _roomMessages.values.forEach((controller) => controller.close());
+    _roomTypings.values.forEach((controller) => controller.close());
+    _rooms.close();
+  }
 }
