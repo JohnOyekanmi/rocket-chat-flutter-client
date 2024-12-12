@@ -1,19 +1,19 @@
-import 'package:rocket_chat_connector_flutter/models/authentication.dart';
-import 'package:rocket_chat_connector_flutter/models/channel.dart';
-import 'package:rocket_chat_connector_flutter/models/channel_counters.dart';
-import 'package:rocket_chat_connector_flutter/models/channel_messages.dart';
-import 'package:rocket_chat_connector_flutter/models/filters/channel_counters_filter.dart';
-import 'package:rocket_chat_connector_flutter/models/filters/channel_history_filter.dart';
-import 'package:rocket_chat_connector_flutter/models/new/message_new.dart';
-import 'package:rocket_chat_connector_flutter/models/response/message_new_response.dart';
-import 'package:rocket_chat_connector_flutter/models/subscription.dart';
-import 'package:rocket_chat_connector_flutter/models/subscription_update.dart';
-import 'package:rocket_chat_connector_flutter/services/authentication_service.dart';
-import 'package:rocket_chat_connector_flutter/services/channel_service.dart';
-import 'package:rocket_chat_connector_flutter/services/http_service.dart'
+import 'package:rocket_chat_flutter_client/models/authentication.dart';
+import 'package:rocket_chat_flutter_client/models/channel.dart';
+import 'package:rocket_chat_flutter_client/models/channel_counters.dart';
+import 'package:rocket_chat_flutter_client/models/channel_messages.dart';
+import 'package:rocket_chat_flutter_client/models/filters/channel_counters_filter.dart';
+import 'package:rocket_chat_flutter_client/models/filters/channel_history_filter.dart';
+import 'package:rocket_chat_flutter_client/models/new/message_new.dart';
+import 'package:rocket_chat_flutter_client/models/response/message_new_response.dart';
+import 'package:rocket_chat_flutter_client/models/subscription.dart';
+import 'package:rocket_chat_flutter_client/models/subscription_update.dart';
+import 'package:rocket_chat_flutter_client/services/authentication_service.dart';
+import 'package:rocket_chat_flutter_client/services/channel_service.dart';
+import 'package:rocket_chat_flutter_client/services/http_service.dart'
     as rocket_http_service;
-import 'package:rocket_chat_connector_flutter/services/message_service.dart';
-import 'package:rocket_chat_connector_flutter/services/subscription_service.dart';
+import 'package:rocket_chat_flutter_client/services/message_service.dart';
+import 'package:rocket_chat_flutter_client/services/subscription_service.dart';
 
 final String serverUrl = "myServerUrl";
 final String username = "myUserName";

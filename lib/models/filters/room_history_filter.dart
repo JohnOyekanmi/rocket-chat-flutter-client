@@ -1,5 +1,5 @@
-import 'package:rocket_chat_connector_flutter/models/filters/room_filter.dart';
-import 'package:rocket_chat_connector_flutter/models/room.dart';
+import 'package:rocket_chat_flutter_client/models/filters/room_filter.dart';
+import 'package:rocket_chat_flutter_client/models/room.dart';
 
 class RoomHistoryFilter extends RoomFilter {
   DateTime? latest;

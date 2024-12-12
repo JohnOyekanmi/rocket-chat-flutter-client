@@ -1,23 +1,23 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:rocket_chat_connector_flutter/exceptions/exception.dart';
-import 'package:rocket_chat_connector_flutter/models/authentication.dart';
-import 'package:rocket_chat_connector_flutter/models/filters/room_counters_filter.dart';
-import 'package:rocket_chat_connector_flutter/models/filters/room_filter.dart';
-import 'package:rocket_chat_connector_flutter/models/filters/room_history_filter.dart';
-import 'package:rocket_chat_connector_flutter/models/new/room_new.dart';
-import 'package:rocket_chat_connector_flutter/models/response/response.dart';
-import 'package:rocket_chat_connector_flutter/models/response/room_new_response.dart';
-import 'package:rocket_chat_connector_flutter/models/room.dart';
-import 'package:rocket_chat_connector_flutter/models/room_counters.dart';
-import 'package:rocket_chat_connector_flutter/models/room_messages.dart';
-import 'package:rocket_chat_connector_flutter/services/http_service.dart';
+import 'package:rocket_chat_flutter_client/exceptions/exception.dart';
+import 'package:rocket_chat_flutter_client/models/authentication.dart';
+import 'package:rocket_chat_flutter_client/models/filters/room_counters_filter.dart';
+import 'package:rocket_chat_flutter_client/models/filters/room_filter.dart';
+import 'package:rocket_chat_flutter_client/models/filters/room_history_filter.dart';
+import 'package:rocket_chat_flutter_client/models/new/room_new.dart';
+import 'package:rocket_chat_flutter_client/models/response/response.dart';
+import 'package:rocket_chat_flutter_client/models/response/room_new_response.dart';
+import 'package:rocket_chat_flutter_client/models/room.dart';
+import 'package:rocket_chat_flutter_client/models/room_counters.dart';
+import 'package:rocket_chat_flutter_client/models/room_messages.dart';
+import 'package:rocket_chat_flutter_client/services/http_service.dart';
 
 class RoomService {
-  HttpService _httpService;
+  final HttpService _httpService;
 
-  RoomService(this._httpService);
+  const RoomService(this._httpService);
 
   Future<RoomNewResponse> create(
     RoomNew roomNew,

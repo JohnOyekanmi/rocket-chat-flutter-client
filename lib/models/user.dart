@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:rocket_chat_connector_flutter/models/email.dart';
-import 'package:rocket_chat_connector_flutter/models/preferences.dart';
+import 'package:rocket_chat_flutter_client/models/email.dart';
+import 'package:rocket_chat_flutter_client/models/preferences.dart';
 
 class User {
   String? id;

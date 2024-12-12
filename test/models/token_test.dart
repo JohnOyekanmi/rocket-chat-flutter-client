@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rocket_chat_connector_flutter/models/token.dart';
+import 'package:rocket_chat_flutter_client/models/token.dart';
 
 import '../scenarios/data/token_data.dart';
 

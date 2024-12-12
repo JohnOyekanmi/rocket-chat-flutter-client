@@ -1,4 +1,4 @@
-import 'package:rocket_chat_connector_flutter/models/new/token_new.dart';
+import 'package:rocket_chat_flutter_client/models/new/token_new.dart';
 
 class TokenNewData {
   static final Map<int, Map<String, dynamic>> tokenNewList = {

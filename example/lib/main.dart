@@ -2,16 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:rocket_chat_connector_flutter/models/authentication.dart';
-import 'package:rocket_chat_connector_flutter/models/channel.dart';
-import 'package:rocket_chat_connector_flutter/models/room.dart';
-import 'package:rocket_chat_connector_flutter/models/user.dart';
-import 'package:rocket_chat_connector_flutter/services/authentication_service.dart';
-import 'package:rocket_chat_connector_flutter/services/http_service.dart'
+import 'package:rocket_chat_flutter_client/models/authentication.dart';
+import 'package:rocket_chat_flutter_client/models/channel.dart';
+import 'package:rocket_chat_flutter_client/models/room.dart';
+import 'package:rocket_chat_flutter_client/models/user.dart';
+import 'package:rocket_chat_flutter_client/services/authentication_service.dart';
+import 'package:rocket_chat_flutter_client/services/http_service.dart'
     as rocket_http_service;
-import 'package:rocket_chat_connector_flutter/web_socket/notification.dart'
+import 'package:rocket_chat_flutter_client/web_socket/notification.dart'
     as rocket_notification;
-import 'package:rocket_chat_connector_flutter/web_socket/web_socket_service.dart';
+import 'package:rocket_chat_flutter_client/web_socket/web_socket_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 void main() => runApp(MyApp());

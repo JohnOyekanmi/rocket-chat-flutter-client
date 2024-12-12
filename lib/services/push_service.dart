@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:rocket_chat_connector_flutter/exceptions/exception.dart';
-import 'package:rocket_chat_connector_flutter/models/authentication.dart';
-import 'package:rocket_chat_connector_flutter/models/new/token_new.dart';
-import 'package:rocket_chat_connector_flutter/models/response/token_new_response.dart';
-import 'package:rocket_chat_connector_flutter/services/http_service.dart';
+import 'package:rocket_chat_flutter_client/exceptions/exception.dart';
+import 'package:rocket_chat_flutter_client/models/authentication.dart';
+import 'package:rocket_chat_flutter_client/models/new/token_new.dart';
+import 'package:rocket_chat_flutter_client/models/response/token_new_response.dart';
+import 'package:rocket_chat_flutter_client/services/http_service.dart';
 
 class PushService {
-  HttpService _httpService;
+  final HttpService _httpService;
 
-  PushService(this._httpService);
+  const PushService(this._httpService);
 
   Future<TokenNewResponse> create(
       TokenNew tokenNew, Authentication authentication) async {

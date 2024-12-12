@@ -1,4 +1,4 @@
-import 'package:rocket_chat_connector_flutter/models/token.dart';
+import 'package:rocket_chat_flutter_client/models/token.dart';
 
 class TokenNewResponse {
   Token? token;

@@ -1,4 +1,4 @@
-import 'package:rocket_chat_connector_flutter/models/channel_messages.dart';
+import 'package:rocket_chat_flutter_client/models/channel_messages.dart';
 
 class ChannelMessagesData {
   static final Map<int, Map<String, dynamic>> channelMessagesList = {

@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:rocket_chat_connector_flutter/models/authentication.dart';
-import 'package:rocket_chat_connector_flutter/models/channel.dart';
-import 'package:rocket_chat_connector_flutter/models/room.dart';
-import 'package:rocket_chat_connector_flutter/models/user.dart';
+import 'package:rocket_chat_flutter_client/models/authentication.dart';
+import 'package:rocket_chat_flutter_client/models/channel.dart';
+import 'package:rocket_chat_flutter_client/models/room.dart';
+import 'package:rocket_chat_flutter_client/models/user.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
