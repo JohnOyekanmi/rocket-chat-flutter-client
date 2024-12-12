@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   #https://pub.dev/packages/collection#-changelog-tab-
-  collection: ^1.19.1
+  collection: ^1.18.0
   #https://pub.dev/packages/http#-changelog-tab-
   http: ^1.2.2
   #https://pub.dev/packages/web_socket_channel/changelog-tab-
