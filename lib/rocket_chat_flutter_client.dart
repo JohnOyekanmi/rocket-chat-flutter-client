@@ -60,40 +60,14 @@ class RocketChatFlutterClient {
   Future<void> _reconnect() async {
     if (_isConnected || _reconnectAttempts >= _maxReconnectAttempts) return;
 
-    try {
-      _reconnectAttempts++;
-      print(
-          'Attempting to reconnect (${_reconnectAttempts}/$_maxReconnectAttempts)...');
+    _reconnectAttempts++;
+    print(
+        'Attempting to reconnect (${_reconnectAttempts}/$_maxReconnectAttempts)...');
 
-      // connect to the websocket.
-      webSocketChannel =
-          webSocketService.connectToWebSocket(webSocketUrl, auth!);
+    init();
 
-      // subscribe to the user.
-      // for :rooms-changed
-      //     :message
-      //     :notification
-      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!.id!);
-
-      // listen to the websocket messages.
-      webSocketChannel.stream.listen(
-        (message) => _handleWebSocketMessage(message),
-        onError: (error, stackTrace) =>
-            _handleWebSocketError(error, stackTrace),
-        onDone: () => _handleWebSocketDone(),
-        cancelOnError: false,
-      );
-
-      _isConnected = true;
-      _reconnectAttempts = 0;
-      _reconnectTimer?.cancel();
-      _reconnectTimer = null;
-
-      print('Successfully reconnected to WebSocket');
-    } on Exception catch (e, s) {
-      _handleError('reconnection', e, s);
-      _scheduleReconnect();
-    }
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
   }
 
   void _scheduleReconnect() {
@@ -133,32 +107,27 @@ class RocketChatFlutterClient {
   ///
   /// Typically called in the main function or initState of a StatefulWidget.
   init() async {
-    authService = AuthenticationService(HttpService(Uri.parse(serverUrl)));
-    messageService = MessageService(HttpService(Uri.parse(serverUrl)));
-    roomService = RoomService(HttpService(Uri.parse(serverUrl)));
-    // create the authentication object.
-    // this will retry the operation after [retryAfter] typically 3 seconds
-    // if the operation fails.
-    await _createAuthObject();
+    // First attempt to initialize the client.
+    if (_reconnectAttempts == 0) {
+      authService = AuthenticationService(HttpService(Uri.parse(serverUrl)));
+      messageService = MessageService(HttpService(Uri.parse(serverUrl)));
+      roomService = RoomService(HttpService(Uri.parse(serverUrl)));
+      // create the authentication object.
+      // this will retry the operation after [retryAfter] typically 3 seconds
+      // if the operation fails.
+      await _createAuthObject();
 
-    // check if the authentication object was created successfully.
-    if (!_authObjectCreated) {
-      return;
+      // check if the authentication object was created successfully.
+      if (!_authObjectCreated) {
+        return;
+      }
     }
 
     try {
       // connect to the websocket.
-      webSocketChannel =
-          webSocketService.connectToWebSocket(webSocketUrl, auth!);
-
-      // subscribe to the user.
-      // for :rooms-changed
-      //     :message
-      //     :notification
-      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!.id!);
-
-      // listen to the websocket messages.
-      webSocketChannel.stream.listen(
+      webSocketChannel = await webSocketService.connectToWebSocket(
+        webSocketUrl,
+        auth!,
         (message) => _handleWebSocketMessage(message),
         onError: (error, stackTrace) =>
             _handleWebSocketError(error, stackTrace),
@@ -166,10 +135,26 @@ class RocketChatFlutterClient {
         cancelOnError: false,
       );
 
+      // subscribe to the user.
+      // for :rooms-changed
+      //     :message
+      //     :notification
+      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!.id!);
+
       _isConnected = true;
       _reconnectAttempts = 0;
+
+      print(
+        _reconnectAttempts > 0
+            ? 'Successfully reconnected to WebSocket'
+            : 'Successfully connected to WebSocket',
+      );
     } on Exception catch (e, s) {
-      _handleError('initialization', e, s);
+      _handleError(
+        _reconnectAttempts > 0 ? 'reconnection' : 'initialization',
+        e,
+        s,
+      );
       _scheduleReconnect();
     }
   }

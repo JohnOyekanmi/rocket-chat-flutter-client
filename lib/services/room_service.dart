@@ -83,7 +83,7 @@ class RoomService {
   Future<RoomMessages> messages(
       String roomId, Authentication authentication) async {
     http.Response response = await _httpService.get(
-      '/api/v1/im.messages?roomId=$roomId&count=50',
+      '/api/v1/im.messages?roomId=$roomId',
       authentication,
     );
 

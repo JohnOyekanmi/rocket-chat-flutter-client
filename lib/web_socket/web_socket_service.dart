@@ -2,13 +2,29 @@ import 'dart:convert';
 
 import 'package:rocket_chat_flutter_client/models/authentication.dart';
 import 'package:rocket_chat_flutter_client/models/message_attachment.dart';
-import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocketService {
-  WebSocketChannel connectToWebSocket(
-      String url, Authentication authentication) {
-    WebSocketChannel webSocketChannel = IOWebSocketChannel.connect(url);
+  Future<WebSocketChannel> connectToWebSocket(
+    String url,
+    Authentication authentication,
+    void Function(dynamic)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) async {
+    WebSocketChannel webSocketChannel =
+        WebSocketChannel.connect(Uri.parse('$url/websocket'));
+    await webSocketChannel.ready;
+
+
+    webSocketChannel.stream.listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
+
     _sendConnectRequest(webSocketChannel);
     _sendLoginRequest(webSocketChannel, authentication);
     return webSocketChannel;
@@ -28,7 +44,7 @@ class WebSocketService {
     Map msg = {
       "msg": "method",
       "method": "login",
-      "id": "42",
+      "id": "login-${DateTime.now().millisecondsSinceEpoch}",
       "params": [
         {"resume": authentication.data!.authToken}
       ]
@@ -69,7 +85,8 @@ class WebSocketService {
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
-  void streamNotifyRoomTyping(WebSocketChannel webSocketChannel, String roomId) {
+  void streamNotifyRoomTyping(
+      WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "sub",
       "id": roomId + "typing-subscription-id",
@@ -80,7 +97,7 @@ class WebSocketService {
 
     webSocketChannel.sink.add(jsonEncode(msg));
   }
-  
+
   // void streamRoomList(WebSocketChannel webSocketChannel, String userId) {
   //   Map msg = {
   //     "msg": "method",
