@@ -128,7 +128,10 @@ class RocketChatFlutterClient {
       webSocketChannel = await webSocketService.connectToWebSocket(
         webSocketUrl,
         auth!,
-        (message) => _handleWebSocketMessage(message),
+        (message) {
+          print('Raw-Message: $message');
+          _handleWebSocketMessage(message);
+        },
         onError: (error, stackTrace) =>
             _handleWebSocketError(error, stackTrace),
         onDone: () => _handleWebSocketDone(),
