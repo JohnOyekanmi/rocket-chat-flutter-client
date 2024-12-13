@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:rocket_chat_flutter_client/exceptions/exception.dart';
 import 'package:rocket_chat_flutter_client/models/authentication.dart';
 import 'package:rocket_chat_flutter_client/models/filters/room_counters_filter.dart';
-import 'package:rocket_chat_flutter_client/models/filters/room_filter.dart';
 import 'package:rocket_chat_flutter_client/models/filters/room_history_filter.dart';
 import 'package:rocket_chat_flutter_client/models/new/room_new.dart';
 import 'package:rocket_chat_flutter_client/models/response/response.dart';
@@ -32,13 +31,15 @@ class RoomService {
     throw RocketChatException(response.body);
   }
 
-  Future<List<SubscriptionUpdate>> getSubscriptions(Authentication authentication) async {
+  Future<List<SubscriptionUpdate>> getSubscriptions(
+      Authentication authentication) async {
     http.Response response =
         await _httpService.get('/api/v1/subscriptions.get', authentication);
     final decoded = jsonDecode(response.body);
 
     if (response.statusCode == 200 && decoded['success'] == true) {
-      return List.from(decoded['update'].map((subscription) => SubscriptionUpdate.fromMap(subscription)));
+      return List.from(decoded['update']
+          .map((subscription) => SubscriptionUpdate.fromMap(subscription)));
     }
 
     throw RocketChatException(response.body);
@@ -81,13 +82,13 @@ class RoomService {
 
   Future<RoomMessages> messages(
       String roomId, Authentication authentication) async {
-    http.Response response = await _httpService.getWithFilter(
-      '/api/v1/im.messages',
-      RoomFilter(Room(id: roomId)),
+    http.Response response = await _httpService.get(
+      '/api/v1/im.messages?roomId=$roomId&count=50',
       authentication,
     );
 
     final decoded = jsonDecode(response.body);
+    print(decoded);
 
     if (response.statusCode == 200 && decoded['success'] == true) {
       return RoomMessages.fromMap(decoded['update']);
