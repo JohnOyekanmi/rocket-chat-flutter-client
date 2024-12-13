@@ -374,7 +374,7 @@ class RocketChatFlutterClient {
 
   /// Send a message to the room.
   void sendMessage(String roomId, String message) async {
-    print('[CLIENT]:sending message to room $roomId: $message');
+    print('[CLIENT-REST]:sending message to room $roomId: $message');
     try {
       await messageService.postMessage(
         MessageNew(roomId: roomId, text: message),
