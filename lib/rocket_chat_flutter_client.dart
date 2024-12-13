@@ -278,6 +278,9 @@ class RocketChatFlutterClient {
       _roomMessages[roomId] = StreamController<List<Message>>.broadcast();
       // Use Future.microtask to avoid synchronous subscription
       Future.microtask(() => _subscribeToRoomMessages(roomId));
+
+      print(
+          '[getMessagesStream]: subscribed to room messages stream for room $roomId');
     }
 
     return _roomMessages[roomId]!.stream;
