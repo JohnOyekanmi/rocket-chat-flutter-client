@@ -24,13 +24,10 @@ class MessageService {
       authentication,
     );
 
-    if (response.statusCode == 200) {
-      if (response.body.isNotEmpty == true) {
-        return MessageNewResponse.fromMap(jsonDecode(response.body));
-      } else {
-        return MessageNewResponse();
-      }
+    if (response.statusCode == 200 && response.body.isNotEmpty == true) {
+      return MessageNewResponse.fromMap(jsonDecode(response.body));
     }
+
     throw RocketChatException(response.body);
   }
 

@@ -5,6 +5,7 @@ import 'package:rocket_chat_flutter_client/models/authentication.dart';
 import 'package:rocket_chat_flutter_client/models/media_metadata.dart';
 import 'package:rocket_chat_flutter_client/models/message.dart';
 import 'package:rocket_chat_flutter_client/models/message_attachment.dart';
+import 'package:rocket_chat_flutter_client/models/new/message_new.dart';
 import 'package:rocket_chat_flutter_client/models/new/room_new.dart';
 import 'package:rocket_chat_flutter_client/models/room.dart';
 import 'package:rocket_chat_flutter_client/models/room_change.dart';
@@ -365,10 +366,38 @@ class RocketChatFlutterClient {
     webSocketService.sendUserTyping(webSocketChannel, roomId, userId, isTyping);
   }
 
+  // /// Send a message to the room.
+  // void sendMessage(String roomId, String message) {
+  //   print('[CLIENT]:sending message to room $roomId: $message');
+  //   webSocketService.sendMessageOnRoom(message, webSocketChannel, roomId);
+  // }
+
   /// Send a message to the room.
-  void sendMessage(String roomId, String message) {
+  void sendMessage(String roomId, String message) async {
     print('[CLIENT]:sending message to room $roomId: $message');
-    webSocketService.sendMessageOnRoom(message, webSocketChannel, roomId);
+    try {
+      await messageService.postMessage(
+        MessageNew(roomId: roomId, text: message),
+        auth!,
+      );
+    } on Exception catch (e, s) {
+      _handleError('sendMessage', e, s);
+      rethrow;
+    }
+  }
+
+  /// Send a message to the room.
+  void postMediaMessage(String roomId, MessageNew message) async {
+    print('[CLIENT]:sending message to room $roomId: $message');
+    try {
+      await messageService.postMessage(
+        message,
+        auth!,
+      );
+    } on Exception catch (e, s) {
+      _handleError('sendMessage', e, s);
+      rethrow;
+    }
   }
 
   /// Send a media message to the room.
@@ -418,11 +447,19 @@ class RocketChatFlutterClient {
       }
 
       // 3. send the audio message to the room.
-      webSocketService.sendMediaMessageOnRoom(
-        message,
-        attachments,
-        webSocketChannel,
+      // webSocketService.sendMediaMessageOnRoom(
+      //   message,
+      //   attachments,
+      //   webSocketChannel,
+      //   roomId,
+      // );
+      postMediaMessage(
         roomId,
+        MessageNew(
+          roomId: roomId,
+          text: message,
+          attachments: attachments,
+        ),
       );
     } on Exception catch (e, s) {
       _handleError('media message sending', e, s);
