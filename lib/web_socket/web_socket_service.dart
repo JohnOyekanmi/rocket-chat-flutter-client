@@ -1,10 +1,7 @@
 import 'dart:convert';
 
 import 'package:rocket_chat_flutter_client/models/authentication.dart';
-import 'package:rocket_chat_flutter_client/models/channel.dart';
 import 'package:rocket_chat_flutter_client/models/message_attachment.dart';
-import 'package:rocket_chat_flutter_client/models/room.dart';
-import 'package:rocket_chat_flutter_client/models/user.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -72,6 +69,18 @@ class WebSocketService {
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
+  void streamNotifyRoomTyping(WebSocketChannel webSocketChannel, String roomId) {
+    Map msg = {
+      "msg": "sub",
+      "id": roomId + "subscription-id",
+      "name": "stream-notify-room",
+      // params[1] indicates the subscription is persistent and should continue receiving updates.
+      "params": [roomId + "/typing", true]
+    };
+
+    webSocketChannel.sink.add(jsonEncode(msg));
+  }
+  
   // void streamRoomList(WebSocketChannel webSocketChannel, String userId) {
   //   Map msg = {
   //     "msg": "method",

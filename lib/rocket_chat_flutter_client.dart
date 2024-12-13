@@ -188,6 +188,7 @@ class RocketChatFlutterClient {
   }
 
   void _handleWebSocketMessage(Map<String, dynamic> message) {
+    print('NEW MESSAGE IN!!!');
     try {
       print('WebSocket message: ${message['msg']}');
 
@@ -271,6 +272,9 @@ class RocketChatFlutterClient {
 
   /// Get the messages stream for a room.
   Stream<List<Message>> getMessagesStream(String roomId) {
+    // subscribe to the room messages stream.
+    webSocketService.streamRoomMessagesSubscribe(webSocketChannel, roomId);
+
     if (!_roomMessages.containsKey(roomId)) {
       _roomMessages[roomId] = StreamController<List<Message>>();
     }
@@ -301,6 +305,9 @@ class RocketChatFlutterClient {
 
   /// Get the typing stream for a room.
   Stream<Typing> getTypingStream(String roomId) {
+    // subscribe to the room typing stream.
+    webSocketService.streamNotifyRoomTyping(webSocketChannel, roomId);
+
     if (!_roomTypings.containsKey(roomId)) {
       _roomTypings[roomId] = StreamController<Typing>();
     }
