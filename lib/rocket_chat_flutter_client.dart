@@ -376,22 +376,8 @@ class RocketChatFlutterClient {
   void sendMessage(String roomId, String message) async {
     print('[CLIENT-REST]:sending message to room $roomId: $message');
     try {
-      await messageService.postMessage(
-        MessageNew(roomId: roomId, text: message),
-        auth!,
-      );
-    } on Exception catch (e, s) {
-      _handleError('sendMessage', e, s);
-      rethrow;
-    }
-  }
-
-  /// Send a message to the room.
-  void postMediaMessage(String roomId, MessageNew message) async {
-    print('[CLIENT]:sending message to room $roomId: $message');
-    try {
-      await messageService.postMessage(
-        message,
+      await messageService.sendMessage(
+        MessageNew(roomId: roomId, message: message),
         auth!,
       );
     } on Exception catch (e, s) {
@@ -453,13 +439,13 @@ class RocketChatFlutterClient {
       //   webSocketChannel,
       //   roomId,
       // );
-      postMediaMessage(
-        roomId,
+      messageService.sendMessage(
         MessageNew(
           roomId: roomId,
-          text: message,
+          message: message,
           attachments: attachments,
         ),
+        auth!,
       );
     } on Exception catch (e, s) {
       _handleError('media message sending', e, s);

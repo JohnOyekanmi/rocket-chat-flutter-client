@@ -19,7 +19,7 @@ void main() {
   late MessageService messageService;
   Authentication authenticationMock = new Authentication();
 
-  MessageNew message = MessageNew(channel: "#general", text: "This is a test!");
+  MessageNew message = MessageNew(roomId: "#general", message: "This is a test!");
 
   setUp(() async {
     httpServiceMock = MockHttpService();
@@ -36,7 +36,7 @@ void main() {
     )).thenAnswer((_) => Future(() => response));
 
     MessageNewResponse messageResponse =
-        await messageService.postMessage(message, authenticationMock);
+        await messageService.sendMessage(message, authenticationMock);
     expect(messageResponse.success, true);
   });
 }

@@ -59,8 +59,8 @@ Future main(List<String> args) async {
       "Last message : ${channelMessages.messages!.first.ts} : ${channelMessages.messages!.first.msg}");
 
   // send message
-  MessageNew messageNew = MessageNew(roomId: channel.id, text: "my message");
+  MessageNew messageNew = MessageNew(roomId: channel.id, message: "my message");
   MessageNewResponse response =
-      await messageService.postMessage(messageNew, authentication);
+      await messageService.sendMessage(messageNew, authentication);
   print("Message send success : ${response.success}");
 }

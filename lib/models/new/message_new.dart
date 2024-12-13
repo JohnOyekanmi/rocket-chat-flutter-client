@@ -6,19 +6,17 @@ import 'package:rocket_chat_flutter_client/models/message_attachment.dart';
 class MessageNew {
   String? alias;
   String? avatar;
-  String? channel;
   String? emoji;
   String? roomId;
-  String? text;
+  String? message;
   List<MessageAttachment>? attachments;
 
   MessageNew({
     this.alias,
     this.avatar,
-    this.channel,
     this.emoji,
     this.roomId,
-    this.text,
+    this.message,
     this.attachments,
   });
 
@@ -26,10 +24,9 @@ class MessageNew {
     if (json != null) {
       alias = json['alias'];
       avatar = json['avatar'];
-      channel = json['channel'];
       emoji = json['emoji'];
-      roomId = json['roomId'];
-      text = json['text'];
+      roomId = json['rid'];
+      message = json['msg'];
 
       if (json['attachments'] != null) {
         List<dynamic> jsonList = json['attachments'].runtimeType == String //
@@ -46,32 +43,25 @@ class MessageNew {
   }
 
   Map<String, dynamic> toMap() {
-    Map<String, dynamic> map = {};
+    Map<String, dynamic> map = {
+      'rid': roomId,
+      'msg': message,
+    };
 
     if (alias != null) {
       map['alias'] = alias;
     }
-
-    if (avatar != null) {
-      map['avatar'] = avatar;
-    }
-    if (channel != null) {
-      map['channel'] = channel;
-    }
     if (emoji != null) {
       map['emoji'] = emoji;
     }
-    if (roomId != null) {
-      map['roomId'] = roomId;
-    }
-    if (text != null) {
-      map['text'] = text;
+    if (avatar != null) {
+      map['avatar'] = avatar;
     }
     if (attachments != null) {
       map['attachments'] = attachments
               ?.where((json) => json != null)
-              ?.map((attachment) => attachment.toMap())
-              ?.toList() ??
+              .map((attachment) => attachment.toMap())
+              .toList() ??
           [];
     }
 
@@ -80,7 +70,7 @@ class MessageNew {
 
   @override
   String toString() {
-    return 'MessageNew{alias: $alias, avatar: $avatar, channel: $channel, emoji: $emoji, roomId: $roomId, text: $text, attachments: $attachments}';
+    return 'MessageNew{alias: $alias, avatar: $avatar, emoji: $emoji, roomId: $roomId, message: $message, attachments: $attachments}';
   }
 
   @override
@@ -90,19 +80,17 @@ class MessageNew {
           runtimeType == other.runtimeType &&
           alias == other.alias &&
           avatar == other.avatar &&
-          channel == other.channel &&
           emoji == other.emoji &&
           roomId == other.roomId &&
-          text == other.text &&
+          message == other.message &&
           DeepCollectionEquality().equals(attachments, other.attachments);
 
   @override
   int get hashCode =>
       alias.hashCode ^
       avatar.hashCode ^
-      channel.hashCode ^
       emoji.hashCode ^
       roomId.hashCode ^
-      text.hashCode ^
+      message.hashCode ^
       attachments.hashCode;
 }

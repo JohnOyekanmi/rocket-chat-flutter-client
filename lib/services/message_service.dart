@@ -16,11 +16,13 @@ class MessageService {
 
   const MessageService(this._httpService);
 
-  Future<MessageNewResponse> postMessage(
+  Future<MessageNewResponse> sendMessage(
       MessageNew message, Authentication authentication) async {
     http.Response response = await _httpService.post(
-      '/api/v1/chat.postMessage',
-      jsonEncode(message.toMap()),
+      '/api/v1/chat.sendMessage',
+      jsonEncode({
+        'message': message.toMap(),
+      }),
       authentication,
     );
 
