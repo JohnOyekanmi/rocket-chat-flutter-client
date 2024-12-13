@@ -159,6 +159,8 @@ class WebSocketService {
       ]
     };
 
+    print('[WEBSOCKET]:sending message to room $roomId: $message');
+
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 

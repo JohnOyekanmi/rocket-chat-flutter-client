@@ -358,6 +358,7 @@ class RocketChatFlutterClient {
 
   /// Send a message to the room.
   void sendMessage(String roomId, String message) {
+    print('[CLIENT]:sending message to room $roomId: $message');
     webSocketService.sendMessageOnRoom(message, webSocketChannel, roomId);
   }
 
