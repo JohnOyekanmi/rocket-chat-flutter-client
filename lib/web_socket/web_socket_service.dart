@@ -72,7 +72,7 @@ class WebSocketService {
   void streamNotifyRoomTyping(WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "sub",
-      "id": roomId + "subscription-id",
+      "id": roomId + "typing-subscription-id",
       "name": "stream-notify-room",
       // params[1] indicates the subscription is persistent and should continue receiving updates.
       "params": [roomId + "/typing", true]

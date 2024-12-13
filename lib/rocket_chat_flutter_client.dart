@@ -41,7 +41,11 @@ class RocketChatFlutterClient {
   late WebSocketChannel webSocketChannel;
   final WebSocketService webSocketService = WebSocketService();
   final Map<String, StreamController<List<Message>>> _roomMessages = {};
+  // Map<roomId, subscriptionId>
+  final Map<String, String> _roomSubscriptions = {};
   final Map<String, StreamController<Typing>> _roomTypings = {};
+  // Map<roomId, typingSubscriptionId>
+  final Map<String, String> _roomTypingSubscriptions = {};
   final StreamController<RoomChange> _rooms = StreamController();
 
   bool get _authObjectCreated => auth != null && auth!.data?.me != null;
@@ -273,26 +277,31 @@ class RocketChatFlutterClient {
 
   /// Get the messages stream for a room.
   Stream<List<Message>> getMessagesStream(String roomId) {
-    // subscribe to the room messages stream if the stream is not already subscribed.
-    if (!_roomMessages.containsKey(roomId)) {
-      _roomMessages[roomId] = StreamController<List<Message>>.broadcast();
+    _roomMessages[roomId] ??= StreamController<List<Message>>.broadcast();
+
+    if (!_roomSubscriptions.containsKey(roomId)) {
+      // subscribe to the room messages stream if the stream is not already subscribed.
       // Use Future.microtask to avoid synchronous subscription
       Future.microtask(() => _subscribeToRoomMessages(roomId));
 
       print(
-          '[getMessagesStream]: subscribed to room messages stream for room $roomId');
+        '[getMessagesStream]: subscribed to room messages stream for room $roomId',
+      );
     }
 
     return _roomMessages[roomId]!.stream;
   }
 
   void _subscribeToRoomMessages(String roomId) {
-    if (_roomMessages.keys.contains(roomId)) {
-      print('Already subscribed to room: $roomId');
+    if (_roomSubscriptions.keys.contains(roomId)) {
+      print('Already subscribed to room messages: $roomId');
       return;
     }
 
     webSocketService.streamRoomMessagesSubscribe(webSocketChannel, roomId);
+
+    // add the subscription id to the map.
+    _roomSubscriptions[roomId] = roomId + "subscription-id";
     print('subscribed to room messages stream for room $roomId');
 
     // fetch initial messages.
@@ -319,23 +328,31 @@ class RocketChatFlutterClient {
 
   /// Get the typing stream for a room.
   Stream<Typing> getTypingStream(String roomId) {
-    // subscribe to the room typing stream if the stream is not already subscribed.
-    if (!_roomTypings.containsKey(roomId)) {
-      _roomTypings[roomId] = StreamController<Typing>.broadcast();
+    _roomTypings[roomId] ??= StreamController<Typing>.broadcast();
+
+    if (!_roomTypingSubscriptions.containsKey(roomId)) {
+      // subscribe to the room typing stream if the stream is not already subscribed.
       // Use Future.microtask to avoid synchronous subscription
       Future.microtask(() => _subscribeToRoomTyping(roomId));
+
+      print(
+        '[getTypingStream]: subscribed to room typing stream for room $roomId',
+      );
     }
 
     return _roomTypings[roomId]!.stream;
   }
 
   void _subscribeToRoomTyping(String roomId) {
-    if (_roomTypings.keys.contains(roomId)) {
+    if (_roomTypingSubscriptions.keys.contains(roomId)) {
       print('Already subscribed to room typing: $roomId');
       return;
     }
 
     webSocketService.streamNotifyRoomTyping(webSocketChannel, roomId);
+
+    // add the subscription id to the map.
+    _roomTypingSubscriptions[roomId] = roomId + "typing-subscription-id";
     print('subscribed to room typing stream for room $roomId');
   }
 
