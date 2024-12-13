@@ -68,7 +68,7 @@ class RocketChatFlutterClient {
       // for :rooms-changed
       //     :message
       //     :notification
-      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!);
+      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!.id!);
 
       // listen to the websocket messages.
       webSocketChannel.stream.listen(
@@ -155,7 +155,7 @@ class RocketChatFlutterClient {
       // for :rooms-changed
       //     :message
       //     :notification
-      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!);
+      webSocketService.streamNotifyUser(webSocketChannel, auth!.data!.me!.id!);
 
       // listen to the websocket messages.
       webSocketChannel.stream.listen(
@@ -278,6 +278,12 @@ class RocketChatFlutterClient {
     return _roomMessages[roomId]!.stream;
   }
 
+  /// Close the messages stream for a room.
+  void closeMessagesStream(String roomId) {
+    _roomMessages[roomId]?.close();
+    _roomMessages.remove(roomId);
+  }
+
   /// Get the typing stream for a room.
   Stream<Typing> getTypingStream(String roomId) {
     if (!_roomTypings.containsKey(roomId)) {
@@ -287,19 +293,40 @@ class RocketChatFlutterClient {
     return _roomTypings[roomId]!.stream;
   }
 
+  /// Close the typing stream for a room.
+  void closeTypingStream(String roomId) {
+    _roomTypings[roomId]?.close();
+    _roomTypings.remove(roomId);
+  }
+
+  Future<Room> getSingleRoom(String roomId) async {
+    try {
+      final room = await roomService.getSingleRoom(roomId, auth!);
+      return room;
+    } on Exception catch (e, s) {
+      _handleError('getSingleRoom', e, s);
+      rethrow;
+    }
+  }
+
   /// Get the rooms stream.
   Stream<RoomChange> getRoomsStream() {
     return _rooms.stream;
   }
 
+  /// Close the rooms stream.
+  void closeRoomsStream() {
+    _rooms.close();
+  }
+
   /// Send a typing status to the room.
-  void sendTyping(Room room, String userId, [bool isTyping = true]) {
-    webSocketService.sendUserTyping(webSocketChannel, room, userId, isTyping);
+  void sendTyping(String roomId, String userId, [bool isTyping = true]) {
+    webSocketService.sendUserTyping(webSocketChannel, roomId, userId, isTyping);
   }
 
   /// Send a message to the room.
-  void sendMessage(Room room, String message) {
-    webSocketService.sendMessageOnRoom(message, webSocketChannel, room);
+  void sendMessage(String roomId, String message) {
+    webSocketService.sendMessageOnRoom(message, webSocketChannel, roomId);
   }
 
   /// Send a media message to the room.
@@ -308,7 +335,7 @@ class RocketChatFlutterClient {
   /// The server will return the media metadata and the message attachment.
   /// The message attachment is then sent to the room.
   void sendMediaMessage(
-    Room room,
+    String roomId,
     List<File> mediaFiles, [
     String? message,
     MediaType? mediaType,
@@ -323,7 +350,7 @@ class RocketChatFlutterClient {
           final mediaMetadata = await messageService.uploadMedia(
             mediaFile,
             message,
-            room.id!,
+            roomId,
             auth!,
             serverUrl,
           );
@@ -353,7 +380,7 @@ class RocketChatFlutterClient {
         message,
         attachments,
         webSocketChannel,
-        room,
+        roomId,
       );
     } on Exception catch (e, s) {
       _handleError('media message sending', e, s);
@@ -362,18 +389,18 @@ class RocketChatFlutterClient {
   }
 
   /// Send an audio file to the room.
-  void sendAudioMessage(Room room, String? message, List<File> audioFiles) {
-    sendMediaMessage(room, audioFiles, message, MediaType.audio);
+  void sendAudioMessage(String roomId, String? message, List<File> audioFiles) {
+    sendMediaMessage(roomId, audioFiles, message, MediaType.audio);
   }
 
   /// Send an image file to the room.
-  void sendImageMessage(Room room, String? message, List<File> imageFiles) {
-    sendMediaMessage(room, imageFiles, message, MediaType.image);
+  void sendImageMessage(String roomId, String? message, List<File> imageFiles) {
+    sendMediaMessage(roomId, imageFiles, message, MediaType.image);
   }
 
   /// Send a video file to the room.
-  void sendVideoMessage(Room room, String? message, List<File> videoFiles) {
-    sendMediaMessage(room, videoFiles, message, MediaType.video);
+  void sendVideoMessage(String roomId, String? message, List<File> videoFiles) {
+    sendMediaMessage(roomId, videoFiles, message, MediaType.video);
   }
 
   // void sendPresence(Room room, String userId) {

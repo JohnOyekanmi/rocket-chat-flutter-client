@@ -1,4 +1,6 @@
 import 'package:collection/collection.dart';
+import 'package:rocket_chat_flutter_client/models/message.dart';
+import 'package:rocket_chat_flutter_client/models/user.dart';
 
 class Room {
   String? id;
@@ -10,6 +12,12 @@ class Room {
   String? topic;
   String? rid;
   List<String>? usernames;
+  // Added missing fields
+  String? name;
+  int? usersCount;
+  User? u;
+  bool? isDefault;
+  Message? lastMessage;
 
   Room({
     this.id,
@@ -21,6 +29,12 @@ class Room {
     this.topic,
     this.rid,
     this.usernames,
+    // Added missing fields in constructor
+    this.name,
+    this.usersCount,
+    this.u,
+    this.isDefault,
+    this.lastMessage,
   });
 
   Room.fromMap(Map<String, dynamic>? json) {
@@ -32,48 +46,49 @@ class Room {
           : null;
       t = json['t'];
       msgs = json['msgs'];
-      ts = DateTime.parse(json['ts']);
-      lm = DateTime.parse(json['lm']);
+      ts = json['ts'] != null ? DateTime.parse(json['ts']) : null;
+      lm = json['lm'] != null ? DateTime.parse(json['lm']) : null;
       topic = json['topic'];
-      usernames =
-          usernames != null ? List<String>.from(json['usernames']) : null;
+      usernames = json['usernames'] != null 
+          ? List<String>.from(json['usernames']) 
+          : null;
+      // Added missing fields parsing
+      name = json['name'];
+      usersCount = json['usersCount'];
+      u = json['u'] != null ? User.fromMap(json['u']) : null;
+      isDefault = json['default'];
+      lastMessage = json['lastMessage'] != null 
+          ? Message.fromMap(json['lastMessage']) 
+          : null;
     }
   }
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {};
-    if (id != null) {
-      map['_id'] = id;
-    }
-    if (rid != null) {
-      map['rid'] = rid;
-    }
-    if (updatedAt != null) {
-      map['_updatedAt'] = updatedAt!.toIso8601String();
-    }
-    if (t != null) {
-      map['t'] = t;
-    }
-    if (msgs != null) {
-      map['msgs'] = msgs;
-    }
-    if (ts != null) {
-      map['ts'] = ts!.toIso8601String();
-    }
-    if (lm != null) {
-      map['lm'] = lm!.toIso8601String();
-    }
-
-    if (topic != null) {
-      map['topic'] = topic;
-    }
-
+    if (id != null) map['_id'] = id;
+    if (rid != null) map['rid'] = rid;
+    if (updatedAt != null) map['_updatedAt'] = updatedAt!.toIso8601String();
+    if (t != null) map['t'] = t;
+    if (msgs != null) map['msgs'] = msgs;
+    if (ts != null) map['ts'] = ts!.toIso8601String();
+    if (lm != null) map['lm'] = lm!.toIso8601String();
+    if (topic != null) map['topic'] = topic;
+    if (usernames != null) map['usernames'] = usernames;
+    // Added missing fields to map
+    if (name != null) map['name'] = name;
+    if (usersCount != null) map['usersCount'] = usersCount;
+    if (u != null) map['u'] = u!.toMap();
+    if (isDefault != null) map['default'] = isDefault;
+    if (lastMessage != null) map['lastMessage'] = lastMessage!.toMap();
     return map;
   }
 
   @override
   String toString() {
-    return 'Room{id: $id, updatedAt: $updatedAt, t: $t, msgs: $msgs, ts: $ts, lm: $lm, topic: $topic, rid: $rid, usernames: $usernames}';
+    return 'Room{id: $id, updatedAt: $updatedAt, t: $t, msgs: $msgs, ts: $ts, '
+           'lm: $lm, topic: $topic, rid: $rid, usernames: $usernames, '
+           'name: $name, usersCount: $usersCount, u: $u, '
+           'isDefault: $isDefault, lastMessage: $lastMessage}';
   }
 
   @override
@@ -89,7 +104,12 @@ class Room {
           lm == other.lm &&
           topic == other.topic &&
           rid == other.rid &&
-          DeepCollectionEquality().equals(usernames, other.usernames);
+          DeepCollectionEquality().equals(usernames, other.usernames) &&
+          name == other.name &&
+          usersCount == other.usersCount &&
+          u == other.u &&
+          isDefault == other.isDefault &&
+          lastMessage == other.lastMessage;
 
   @override
   int get hashCode =>
@@ -101,5 +121,10 @@ class Room {
       lm.hashCode ^
       topic.hashCode ^
       rid.hashCode ^
-      usernames.hashCode;
+      usernames.hashCode ^
+      name.hashCode ^
+      usersCount.hashCode ^
+      u.hashCode ^
+      isDefault.hashCode ^
+      lastMessage.hashCode;
 }

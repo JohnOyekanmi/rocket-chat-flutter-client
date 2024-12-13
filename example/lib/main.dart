@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:rocket_chat_flutter_client/models/authentication.dart';
 import 'package:rocket_chat_flutter_client/models/channel.dart';
@@ -42,7 +41,7 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   final String title;
 
-  MyHomePage({Key ?key, required this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -50,9 +49,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _controller = TextEditingController();
- late  WebSocketChannel webSocketChannel;
- late  WebSocketService webSocketService = WebSocketService();
-   User ?user;
+  late WebSocketChannel webSocketChannel;
+  late WebSocketService webSocketService = WebSocketService();
+  User? user;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
             user = snapshot.data!.data!.me;
             webSocketChannel = webSocketService.connectToWebSocket(
                 webSocketUrl, snapshot.data!);
-            webSocketService.streamNotifyUserSubscribe(webSocketChannel, user!);
+            webSocketService.streamNotifyUserSubscribe(
+                webSocketChannel, user!.id!);
             return _getScaffold();
           } else {
             return Center(child: CircularProgressIndicator());
@@ -91,13 +91,14 @@ class _MyHomePageState extends State<MyHomePage> {
               stream: webSocketChannel.stream,
               builder: (context, snapshot) {
                 print(snapshot.data);
-                rocket_notification.Notification? notification = snapshot.hasData
-                    ? rocket_notification.Notification.fromMap(
-                        jsonDecode(snapshot.data))
-                    : null;
+                rocket_notification.Notification? notification =
+                    snapshot.hasData
+                        ? rocket_notification.Notification.fromMap(
+                            jsonDecode(snapshot.data))
+                        : null;
                 print(notification);
                 webSocketService.streamNotifyUserSubscribe(
-                    webSocketChannel, user!);
+                    webSocketChannel, user!.id!);
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24.0),
                   child: Text(
@@ -119,9 +120,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void _sendMessage() {
     if (_controller.text.isNotEmpty) {
       webSocketService.sendMessageOnChannel(
-          _controller.text, webSocketChannel, channel);
+          _controller.text, webSocketChannel, channel.id!);
       webSocketService.sendMessageOnRoom(
-          _controller.text, webSocketChannel, room);
+          _controller.text, webSocketChannel, room.id!);
     }
   }
 

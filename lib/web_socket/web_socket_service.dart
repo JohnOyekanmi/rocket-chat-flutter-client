@@ -48,25 +48,25 @@ class WebSocketService {
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
-  void streamNotifyRoom(WebSocketChannel webSocketChannel, Room room) {
+  void streamNotifyRoom(WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "sub",
-      "id": room.id! + "subscription-id",
+      "id": roomId + "subscription-id",
       "name": "stream-notify-room",
       // params[1] indicates the subscription is persistent and should continue receiving updates.
-      "params": ["${room.id!}/rooms-changed", true],
+      "params": ["${roomId}/rooms-changed", true],
     };
 
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
-  void streamNotifyUser(WebSocketChannel webSocketChannel, User user) {
+  void streamNotifyUser(WebSocketChannel webSocketChannel, String userId) {
     Map msg = {
       "msg": "sub",
-      "id": user.id! + "subscription-id",
+      "id": userId + "subscription-id",
       "name": "stream-notify-user",
       // params[1] indicates the subscription is persistent and should continue receiving updates.
-      "params": ["${user.id!}/notification", true],
+      "params": ["${userId}/notification", true],
     };
 
     webSocketChannel.sink.add(jsonEncode(msg));
@@ -82,65 +82,66 @@ class WebSocketService {
   //   webSocketChannel.sink.add(jsonEncode(msg));
   // }
 
-  void streamNotifyUserSubscribe(WebSocketChannel webSocketChannel, User user) {
+  void streamNotifyUserSubscribe(
+      WebSocketChannel webSocketChannel, String userId) {
     Map msg = {
       "msg": "sub",
-      "id": user.id! + "subscription-id",
+      "id": userId + "subscription-id",
       "name": "stream-notify-user",
-      "params": [user.id! + "/notification", false]
+      "params": [userId + "/notification", false]
     };
 
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
   void streamChannelMessagesSubscribe(
-      WebSocketChannel webSocketChannel, Channel channel) {
+      WebSocketChannel webSocketChannel, String channelId) {
     Map msg = {
       "msg": "sub",
-      "id": channel.id! + "subscription-id",
+      "id": channelId + "subscription-id",
       "name": "stream-room-messages",
-      "params": [channel.id, false]
+      "params": [channelId, false]
     };
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
   void streamChannelMessagesUnsubscribe(
-      WebSocketChannel webSocketChannel, Channel channel) {
+      WebSocketChannel webSocketChannel, String channelId) {
     Map msg = {
       "msg": "unsub",
-      "id": channel.id! + "subscription-id",
+      "id": channelId + "subscription-id",
     };
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
   void streamRoomMessagesSubscribe(
-      WebSocketChannel webSocketChannel, Room room) {
+      WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "sub",
-      "id": room.id! + "subscription-id",
+      "id": roomId + "subscription-id",
       "name": "stream-room-messages",
-      "params": [room.id, true]
+      "params": [roomId, true]
     };
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
   void streamRoomMessagesUnsubscribe(
-      WebSocketChannel webSocketChannel, Room room) {
+      WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "unsub",
-      "id": room.id! + "subscription-id",
+      "id": roomId + "subscription-id",
     };
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
   void sendMessageOnChannel(
-      String message, WebSocketChannel webSocketChannel, Channel channel) {
+      String message, WebSocketChannel webSocketChannel, String channelId) {
     Map msg = {
       "msg": "method",
       "method": "sendMessage",
-      "id": "${channel.id!}/sendMessage",
+      "id": "${channelId}/sendMessage",
       "params": [
-        {"rid": channel.id, "msg": message}
+        {"rid": channelId, "msg": message}
       ]
     };
 
@@ -148,13 +149,13 @@ class WebSocketService {
   }
 
   void sendMessageOnRoom(
-      String message, WebSocketChannel webSocketChannel, Room room) {
+      String message, WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "method",
       "method": "sendMessage",
-      "id": "${room.id!}/sendMessage",
+      "id": "${roomId}/sendMessage",
       "params": [
-        {"rid": room.id, "msg": message}
+        {"rid": roomId, "msg": message}
       ]
     };
 
@@ -172,14 +173,14 @@ class WebSocketService {
   }
 
   void sendUserTyping(
-      WebSocketChannel webSocketChannel, Room room, String userId,
+      WebSocketChannel webSocketChannel, String roomId, String userId,
       [bool isTyping = true]) {
     Map msg = {
       "msg": "method",
       "method": "stream-notify-room",
-      "id": "${room.id!}/${userId}/typing",
+      "id": "${roomId}/${userId}/typing",
       "params": [
-        "${room.id!}/typing",
+        "${roomId}/typing",
         userId,
         isTyping,
       ],
@@ -192,15 +193,15 @@ class WebSocketService {
     String? message,
     List<MessageAttachment> attachments,
     WebSocketChannel webSocketChannel,
-    Room room,
+    String roomId,
   ) {
     Map msg = {
       "msg": "method",
       "method": "sendMessage",
-      "id": "${room.id!}/send-media-message",
+      "id": "${roomId}/send-media-message",
       "params": [
         {
-          "rid": room.id,
+          "rid": roomId,
           "msg": message,
           "attachments": attachments.map((e) => e.toMap()).toList(),
         }

@@ -39,6 +39,20 @@ class RoomService {
     throw RocketChatException(response.body);
   }
 
+  Future<Room> getSingleRoom(
+      String roomId, Authentication authentication) async {
+    http.Response response = await _httpService.get(
+      '/api/v1/rooms.info/?roomId=$roomId',
+      authentication,
+    );
+
+    if (response.statusCode == 200) {
+      return Room.fromMap(jsonDecode(response.body)['room']);
+    }
+
+    throw RocketChatException(response.body);
+  }
+
   Future<RoomMessages> messages(
       Room room, Authentication authentication) async {
     http.Response response = await _httpService.getWithFilter(
