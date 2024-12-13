@@ -273,9 +273,9 @@ class RocketChatFlutterClient {
 
   /// Get the messages stream for a room.
   Stream<List<Message>> getMessagesStream(String roomId) {
-    _roomMessages[roomId] ??= StreamController<List<Message>>.broadcast();
-
+    // subscribe to the room messages stream if the stream is not already subscribed.
     if (!_roomMessages.containsKey(roomId)) {
+      _roomMessages[roomId] = StreamController<List<Message>>.broadcast();
       // Use Future.microtask to avoid synchronous subscription
       Future.microtask(() => _subscribeToRoomMessages(roomId));
     }
@@ -316,9 +316,9 @@ class RocketChatFlutterClient {
 
   /// Get the typing stream for a room.
   Stream<Typing> getTypingStream(String roomId) {
-    _roomTypings[roomId] ??= StreamController<Typing>.broadcast();
-
+    // subscribe to the room typing stream if the stream is not already subscribed.
     if (!_roomTypings.containsKey(roomId)) {
+      _roomTypings[roomId] = StreamController<Typing>.broadcast();
       // Use Future.microtask to avoid synchronous subscription
       Future.microtask(() => _subscribeToRoomTyping(roomId));
     }
