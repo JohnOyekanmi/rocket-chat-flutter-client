@@ -91,7 +91,7 @@ class RoomService {
     print(decoded);
 
     if (response.statusCode == 200 && decoded['success'] == true) {
-      return RoomMessages.fromMap(decoded['update']);
+      return RoomMessages.fromMap(decoded['messages']);
     }
     throw RocketChatException(response.body);
   }
