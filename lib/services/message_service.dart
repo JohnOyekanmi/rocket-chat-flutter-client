@@ -6,7 +6,6 @@ import 'package:http_parser/http_parser.dart' as http_parser;
 import 'package:mime/mime.dart';
 import 'package:rocket_chat_flutter_client/exceptions/exception.dart';
 import 'package:rocket_chat_flutter_client/models/authentication.dart';
-import 'package:rocket_chat_flutter_client/models/media_metadata.dart';
 import 'package:rocket_chat_flutter_client/models/new/message_new.dart';
 import 'package:rocket_chat_flutter_client/models/response/message_new_response.dart';
 import 'package:rocket_chat_flutter_client/services/http_service.dart';
@@ -35,7 +34,7 @@ class MessageService {
     throw RocketChatException(response.body);
   }
 
-  Future<MediaMetadata> uploadMedia(
+  Future<bool> uploadMedia(
     File mediaFile,
     String? message,
     String roomId,
@@ -73,6 +72,13 @@ class MessageService {
       'Content-Type': 'multipart/form-data',
     });
 
+    if (message != null) {
+      // add message
+      request.fields.addAll(
+        {'msg': message},
+      );
+    }
+
     // Send the request
     final response = await request.send();
 
@@ -82,10 +88,10 @@ class MessageService {
     if (response.statusCode == 200) {
       // Handle the response data
       print('Upload successful!');
-      print('Response: $decodedResponse');
-      return MediaMetadata.fromMap(decodedResponse['file']);
+      print('\n\nHere is the Decoded Response: $decodedResponse\n\n\n');
+      return true;
     }
 
-    throw RocketChatException(decodedResponse);
+    return false;
   }
 }

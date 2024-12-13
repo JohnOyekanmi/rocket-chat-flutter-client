@@ -60,11 +60,19 @@ class Message {
       bot = json['bot'] != null ? Bot.fromMap(json['bot']) : null;
       groupable = json['groupable'];
       t = json['t'];
-      ts = json['ts'] != null ? DateTime.parse(json['ts']) : null;
+      ts = json['ts'] != null
+          ? (json['ts'] is Map && json['ts'].containsKey('\$date')
+              ? DateTime.fromMillisecondsSinceEpoch(json['ts']['\$date'])
+              : DateTime.parse(json['ts']))
+          : null;
       user = json['u'] != null ? User.fromMap(json['u']) : null;
       rid = json['rid'];
       updatedAt = json['_updatedAt'] != null
-          ? DateTime.parse(json['_updatedAt'])
+          ? (json['_updatedAt'] is Map &&
+                  json['_updatedAt'].containsKey('\$date')
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  json['_updatedAt']['\$date'])
+              : DateTime.parse(json['_updatedAt']))
           : null;
       id = json['_id'];
 
@@ -103,8 +111,11 @@ class Message {
 
       editedBy =
           json['editedBy'] != null ? User.fromMap(json['editedBy']) : null;
-      editedAt =
-          json['editedAt'] != null ? DateTime.parse(json['editedAt']) : null;
+      editedAt = json['editedAt'] != null
+          ? (json['editedAt'] is Map && json['editedAt'].containsKey('\$date')
+              ? DateTime.fromMillisecondsSinceEpoch(json['editedAt']['\$date'])
+              : DateTime.parse(json['editedAt']))
+          : null;
       urls = json['urls'] != null ? List<String>.from(json['urls']) : null;
     }
   }
@@ -151,8 +162,8 @@ class Message {
     if (mentions != null) {
       map['mentions'] = mentions
               ?.where((json) => json != null)
-              ?.map((mention) => mention.toMap())
-              ?.toList() ??
+              .map((mention) => mention.toMap())
+              .toList() ??
           [];
     }
     if (channels != null) {
@@ -170,8 +181,8 @@ class Message {
     if (attachments != null) {
       map['attachments'] = attachments
               ?.where((json) => json != null)
-              ?.map((attachment) => attachment.toMap())
-              ?.toList() ??
+              .map((attachment) => attachment.toMap())
+              .toList() ??
           [];
     }
     if (editedBy != null) {

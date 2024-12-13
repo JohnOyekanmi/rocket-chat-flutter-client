@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:rocket_chat_flutter_client/models/authentication.dart';
-import 'package:rocket_chat_flutter_client/models/media_metadata.dart';
 import 'package:rocket_chat_flutter_client/models/message.dart';
 import 'package:rocket_chat_flutter_client/models/message_attachment.dart';
 import 'package:rocket_chat_flutter_client/models/new/message_new.dart';
@@ -46,7 +46,7 @@ class RocketChatFlutterClient {
   final Map<String, StreamController<Typing>> _roomTypings = {};
   // Map<roomId, typingSubscriptionId>
   final Map<String, String> _roomTypingSubscriptions = {};
-  final StreamController<RoomChange> _rooms = StreamController();
+  final StreamController<RoomChange> _rooms = StreamController.broadcast();
 
   bool get _authObjectCreated => auth != null && auth!.data?.me != null;
 
@@ -130,7 +130,7 @@ class RocketChatFlutterClient {
         auth!,
         (message) {
           print('Raw-Message: $message');
-          _handleWebSocketMessage(message);
+          _handleWebSocketMessage(jsonDecode(message));
         },
         onError: (error, stackTrace) =>
             _handleWebSocketError(error, stackTrace),
@@ -241,7 +241,7 @@ class RocketChatFlutterClient {
 
           // ---> message
           final roomId = message['fields']['eventName'];
-          final List<Map<String, dynamic>> value = message['fields']['args'];
+          final List<dynamic> value = message['fields']['args'];
 
           _roomMessages[roomId]
               ?.add(value.map((m) => Message.fromMap(m)).toList());
@@ -312,6 +312,7 @@ class RocketChatFlutterClient {
   void closeMessagesStream(String roomId) {
     _roomMessages[roomId]?.close();
     _roomMessages.remove(roomId);
+    _roomSubscriptions.remove(roomId);
   }
 
   /// Get the typing stream for a room.
@@ -348,6 +349,7 @@ class RocketChatFlutterClient {
   void closeTypingStream(String roomId) {
     _roomTypings[roomId]?.close();
     _roomTypings.remove(roomId);
+    _roomTypingSubscriptions.remove(roomId);
   }
 
   Future<Room> getSingleRoom(String roomId) async {
@@ -424,55 +426,55 @@ class RocketChatFlutterClient {
     MediaType? mediaType,
   ]) async {
     try {
-      final mediaMetadataList = <MediaMetadata>[];
-      final attachments = <MessageAttachment>[];
+      // final mediaMetadataList = <MediaMetadata>[];
+      // final attachments = <MessageAttachment>[];
 
       for (var mediaFile in mediaFiles) {
         try {
           // 1. upload the audio file to the server and get the media metadata.
-          final mediaMetadata = await messageService.uploadMedia(
+          final uploadSuccessful = await messageService.uploadMedia(
             mediaFile,
             message,
             roomId,
             auth!,
             serverUrl,
           );
-          mediaMetadataList.add(mediaMetadata);
+          if (!uploadSuccessful) throw 'upload unsuccessful';
         } on Exception catch (e, s) {
           _handleError('media upload', e, s);
           continue; // Skip this file but continue with others
         }
       }
 
-      if (mediaMetadataList.isEmpty) {
-        throw Exception('No media files were successfully uploaded');
-      }
+      // if (mediaMetadataList.isEmpty) {
+      //   throw Exception('No media files were successfully uploaded');
+      // }
 
-      for (var mediaMetadata in mediaMetadataList) {
-        // 2. create the message attachment.
-        final attachment = MessageAttachment(
-          audioUrl: mediaType == MediaType.audio ? mediaMetadata.url : null,
-          imageUrl: mediaType == MediaType.image ? mediaMetadata.url : null,
-          videoUrl: mediaType == MediaType.video ? mediaMetadata.url : null,
-        );
-        attachments.add(attachment);
-      }
+      // for (var mediaMetadata in mediaMetadataList) {
+      //   // 2. create the message attachment.
+      //   final attachment = MessageAttachment(
+      //     audioUrl: mediaType == MediaType.audio ? mediaMetadata.url : null,
+      //     imageUrl: mediaType == MediaType.image ? mediaMetadata.url : null,
+      //     videoUrl: mediaType == MediaType.video ? mediaMetadata.url : null,
+      //   );
+      //   attachments.add(attachment);
+      // }
 
-      // 3. send the audio message to the room.
-      // webSocketService.sendMediaMessageOnRoom(
-      //   message,
-      //   attachments,
-      //   webSocketChannel,
-      //   roomId,
+      // // 3. send the audio message to the room.
+      // // webSocketService.sendMediaMessageOnRoom(
+      // //   message,
+      // //   attachments,
+      // //   webSocketChannel,
+      // //   roomId,
+      // // );
+      // messageService.sendMessage(
+      //   MessageNew(
+      //     roomId: roomId,
+      //     message: message,
+      //     attachments: attachments,
+      //   ),
+      //   auth!,
       // );
-      messageService.sendMessage(
-        MessageNew(
-          roomId: roomId,
-          message: message,
-          attachments: attachments,
-        ),
-        auth!,
-      );
     } on Exception catch (e, s) {
       _handleError('media message sending', e, s);
       rethrow;
