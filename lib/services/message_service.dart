@@ -26,6 +26,8 @@ class MessageService {
       authentication,
     );
 
+    print('Response: ${response.body}');
+
     if (response.statusCode == 200 && response.body.isNotEmpty == true) {
       return MessageNewResponse.fromMap(jsonDecode(response.body));
     }

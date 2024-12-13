@@ -273,20 +273,29 @@ class RocketChatFlutterClient {
 
   /// Get the messages stream for a room.
   Stream<List<Message>> getMessagesStream(String roomId) {
-    // subscribe to the room messages stream.
-    webSocketService.streamRoomMessagesSubscribe(webSocketChannel, roomId);
-    print('subscribed to room messages stream for room $roomId');
+    _roomMessages[roomId] ??= StreamController<List<Message>>.broadcast();
 
     if (!_roomMessages.containsKey(roomId)) {
-      _roomMessages[roomId] = StreamController<List<Message>>();
+      // Use Future.microtask to avoid synchronous subscription
+      Future.microtask(() => _subscribeToRoomMessages(roomId));
     }
+
+    return _roomMessages[roomId]!.stream;
+  }
+
+  void _subscribeToRoomMessages(String roomId) {
+    if (_roomMessages.keys.contains(roomId)) {
+      print('Already subscribed to room: $roomId');
+      return;
+    }
+
+    webSocketService.streamRoomMessagesSubscribe(webSocketChannel, roomId);
+    print('subscribed to room messages stream for room $roomId');
 
     // fetch initial messages.
     roomService.messages(roomId, auth!).then((messages) {
       _roomMessages[roomId]?.add(messages.messages ?? []);
     });
-
-    return _roomMessages[roomId]!.stream;
   }
 
   /// Mark a message as read.
@@ -307,15 +316,24 @@ class RocketChatFlutterClient {
 
   /// Get the typing stream for a room.
   Stream<Typing> getTypingStream(String roomId) {
-    // subscribe to the room typing stream.
-    webSocketService.streamNotifyRoomTyping(webSocketChannel, roomId);
-    print('subscribed to room typing stream for room $roomId');
+    _roomTypings[roomId] ??= StreamController<Typing>.broadcast();
 
     if (!_roomTypings.containsKey(roomId)) {
-      _roomTypings[roomId] = StreamController<Typing>();
+      // Use Future.microtask to avoid synchronous subscription
+      Future.microtask(() => _subscribeToRoomTyping(roomId));
     }
 
     return _roomTypings[roomId]!.stream;
+  }
+
+  void _subscribeToRoomTyping(String roomId) {
+    if (_roomTypings.keys.contains(roomId)) {
+      print('Already subscribed to room typing: $roomId');
+      return;
+    }
+
+    webSocketService.streamNotifyRoomTyping(webSocketChannel, roomId);
+    print('subscribed to room typing stream for room $roomId');
   }
 
   /// Close the typing stream for a room.
