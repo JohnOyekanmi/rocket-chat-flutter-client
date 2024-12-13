@@ -102,12 +102,7 @@ class RocketChatFlutterClient {
   Future<void> _createAuthObject() async {
     try {
       // create a fake authentication object.
-      final _fakeAuth = Authentication.fromMap({
-        'data': {
-          'authToken': authToken,
-          'userId': userId,
-        }
-      });
+      final _fakeAuth = Authentication.fakeAuth(authToken, userId);
 
       // fetch user data.
       final User me = await authService.me(_fakeAuth);

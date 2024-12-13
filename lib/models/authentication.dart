@@ -24,6 +24,16 @@ class Authentication {
     );
   }
 
+  static Authentication fakeAuth(String authToken, String userId) {
+    return Authentication.fromMap({
+      'status': 'success',
+      'data': {
+        'authToken': authToken,
+        'userId': userId,
+      }
+    });
+  }
+
   Map<String, dynamic> toMap() => {
         'status': status,
         'data': data != null ? data!.toMap() : null,
