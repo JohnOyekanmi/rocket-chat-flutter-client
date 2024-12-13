@@ -12,12 +12,37 @@ import 'package:rocket_chat_flutter_client/models/response/room_new_response.dar
 import 'package:rocket_chat_flutter_client/models/room.dart';
 import 'package:rocket_chat_flutter_client/models/room_counters.dart';
 import 'package:rocket_chat_flutter_client/models/room_messages.dart';
+import 'package:rocket_chat_flutter_client/models/subscription_update.dart';
 import 'package:rocket_chat_flutter_client/services/http_service.dart';
 
 class RoomService {
   final HttpService _httpService;
 
   const RoomService(this._httpService);
+
+  Future<List<Room>> getRooms(Authentication authentication) async {
+    http.Response response =
+        await _httpService.get('/api/v1/rooms.get', authentication);
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && decoded['success'] == true) {
+      return List.from(decoded['update'].map((room) => Room.fromMap(room)));
+    }
+
+    throw RocketChatException(response.body);
+  }
+
+  Future<List<SubscriptionUpdate>> getSubscriptions(Authentication authentication) async {
+    http.Response response =
+        await _httpService.get('/api/v1/subscriptions.get', authentication);
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && decoded['success'] == true) {
+      return List.from(decoded['update'].map((subscription) => SubscriptionUpdate.fromMap(subscription)));
+    }
+
+    throw RocketChatException(response.body);
+  }
 
   Future<RoomNewResponse> create(
     RoomNew roomNew,
@@ -29,13 +54,12 @@ class RoomService {
       authentication,
     );
 
-    if (response.statusCode == 200) {
-      if (response.body.isNotEmpty == true) {
-        return RoomNewResponse.fromMap(jsonDecode(response.body));
-      } else {
-        return RoomNewResponse();
-      }
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && decoded['success'] == true) {
+      return RoomNewResponse.fromMap(decoded['update']);
     }
+
     throw RocketChatException(response.body);
   }
 
@@ -46,33 +70,33 @@ class RoomService {
       authentication,
     );
 
-    if (response.statusCode == 200) {
-      return Room.fromMap(jsonDecode(response.body)['room']);
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && decoded['success'] == true) {
+      return Room.fromMap(decoded['update']);
     }
 
     throw RocketChatException(response.body);
   }
 
   Future<RoomMessages> messages(
-      Room room, Authentication authentication) async {
+      String roomId, Authentication authentication) async {
     http.Response response = await _httpService.getWithFilter(
       '/api/v1/im.messages',
-      RoomFilter(room),
+      RoomFilter(Room(id: roomId)),
       authentication,
     );
 
-    if (response.statusCode == 200) {
-      if (response.body.isNotEmpty == true) {
-        return RoomMessages.fromMap(jsonDecode(response.body));
-      } else {
-        return RoomMessages();
-      }
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && decoded['success'] == true) {
+      return RoomMessages.fromMap(decoded['update']);
     }
     throw RocketChatException(response.body);
   }
 
-  Future<bool> markAsRead(Room room, Authentication authentication) async {
-    Map<String, String?> body = {"rid": room.id};
+  Future<bool> markAsRead(String roomId, Authentication authentication) async {
+    Map<String, String?> body = {"rid": roomId};
 
     http.Response response = await _httpService.post(
       '/api/v1/subscriptions.read',
@@ -80,12 +104,10 @@ class RoomService {
       authentication,
     );
 
+    final decoded = jsonDecode(response.body);
+
     if (response.statusCode == 200) {
-      if (response.body.isNotEmpty == true) {
-        return Response.fromMap(jsonDecode(response.body)).success == true;
-      } else {
-        return false;
-      }
+      return Response.fromMap(decoded['update']).success == true;
     }
     throw RocketChatException(response.body);
   }
@@ -98,12 +120,10 @@ class RoomService {
       authentication,
     );
 
-    if (response.statusCode == 200) {
-      if (response.body.isNotEmpty == true) {
-        return RoomMessages.fromMap(jsonDecode(response.body));
-      } else {
-        return RoomMessages();
-      }
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && decoded['success'] == true) {
+      return RoomMessages.fromMap(decoded['update']);
     }
     throw RocketChatException(response.body);
   }
@@ -116,12 +136,10 @@ class RoomService {
       authentication,
     );
 
-    if (response.statusCode == 200) {
-      if (response.body.isNotEmpty == true) {
-        return RoomCounters.fromMap(jsonDecode(response.body));
-      } else {
-        return RoomCounters();
-      }
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && decoded['success'] == true) {
+      return RoomCounters.fromMap(decoded['update']);
     }
     throw RocketChatException(response.body);
   }

@@ -264,9 +264,14 @@ class RocketChatFlutterClient {
   }
 
   /// Create a direct message room with the user.
-  Future createDirectMessage(String username) async {
-    final room = await roomService.create(RoomNew(), auth!);
-    return room;
+  Future<Room> createDirectMessage(String username) async {
+    try {
+      final room = await roomService.create(RoomNew(), auth!);
+      return room.room!;
+    } on Exception catch (e, s) {
+      _handleError('createDirectMessage', e, s);
+      rethrow;
+    }
   }
 
   /// Get the messages stream for a room.
@@ -275,7 +280,22 @@ class RocketChatFlutterClient {
       _roomMessages[roomId] = StreamController<List<Message>>();
     }
 
+    // fetch initial messages.
+    roomService.messages(roomId, auth!).then((messages) {
+      _roomMessages[roomId]?.add(messages.messages ?? []);
+    });
+
     return _roomMessages[roomId]!.stream;
+  }
+
+  /// Mark a message as read.
+  Future<bool> markMessageAsRead(String roomId) async {
+    try {
+      return await roomService.markAsRead(roomId, auth!);
+    } on Exception catch (e, s) {
+      _handleError('markMessageAsRead', e, s);
+      rethrow;
+    }
   }
 
   /// Close the messages stream for a room.
@@ -311,7 +331,24 @@ class RocketChatFlutterClient {
 
   /// Get the rooms stream.
   Stream<RoomChange> getRoomsStream() {
+    // fetch initial messages.
+    roomService.getSubscriptions(auth!).then((subscriptions) {
+      for (var subscription in subscriptions) {
+        _rooms.add(RoomChange(RoomChangeType.added, subscription));
+      }
+    });
+
     return _rooms.stream;
+  }
+
+  /// Get a list of rooms user belongs to.
+  Future<List<Room>> getRooms() async {
+    try {
+      return await roomService.getRooms(auth!);
+    } on Exception catch (e, s) {
+      _handleError('getRooms', e, s);
+      rethrow;
+    }
   }
 
   /// Close the rooms stream.

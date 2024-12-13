@@ -66,7 +66,7 @@ void main() {
     )).thenAnswer((_) => Future(() => response));
 
     RoomMessages roomMessages =
-        await roomService.messages(room, authenticationMock);
+        await roomService.messages(room.id!, authenticationMock);
     expect(roomMessages.success, true);
   });
 
@@ -82,7 +82,7 @@ void main() {
       authenticationMock,
     )).thenAnswer((_) => Future(() => response));
 
-    bool success = await roomService.markAsRead(room, authenticationMock);
+    bool success = await roomService.markAsRead(room.id!, authenticationMock);
     expect(success, true);
   });
 
