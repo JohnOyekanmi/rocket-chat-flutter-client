@@ -274,6 +274,7 @@ class RocketChatFlutterClient {
   Stream<List<Message>> getMessagesStream(String roomId) {
     // subscribe to the room messages stream.
     webSocketService.streamRoomMessagesSubscribe(webSocketChannel, roomId);
+    print('subscribed to room messages stream for room $roomId');
 
     if (!_roomMessages.containsKey(roomId)) {
       _roomMessages[roomId] = StreamController<List<Message>>();
@@ -307,6 +308,7 @@ class RocketChatFlutterClient {
   Stream<Typing> getTypingStream(String roomId) {
     // subscribe to the room typing stream.
     webSocketService.streamNotifyRoomTyping(webSocketChannel, roomId);
+    print('subscribed to room typing stream for room $roomId');
 
     if (!_roomTypings.containsKey(roomId)) {
       _roomTypings[roomId] = StreamController<Typing>();
