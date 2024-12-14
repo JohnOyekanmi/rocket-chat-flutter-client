@@ -74,9 +74,7 @@ class MessageService {
 
     if (message != null) {
       // add message
-      request.fields.addAll(
-        {'msg': message},
-      );
+      request.fields['msg'] = message;
     }
 
     // Send the request
