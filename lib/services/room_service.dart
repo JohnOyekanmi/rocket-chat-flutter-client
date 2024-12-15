@@ -58,7 +58,8 @@ class RoomService {
     final decoded = jsonDecode(response.body);
 
     if (response.statusCode == 200 && decoded['success'] == true) {
-      return RoomNewResponse.fromMap(decoded['update']);
+      print('SERVER-RESPONSE: $decoded');
+      return RoomNewResponse.fromMap(decoded);
     }
 
     throw RocketChatException(response.body);

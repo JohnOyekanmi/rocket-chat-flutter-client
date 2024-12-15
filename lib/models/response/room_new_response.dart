@@ -1,29 +1,27 @@
-import 'package:rocket_chat_flutter_client/models/room.dart';
-
 class RoomNewResponse {
-  Room? room;
-  bool? success;
+  String roomId;
+  bool success;
 
   RoomNewResponse({
-    this.room,
-    this.success = false,
+    required this.roomId,
+    required this.success,
   });
 
-  RoomNewResponse.fromMap(Map<String, dynamic>? json) {
-    if (json != null) {
-      room = json['room'] != null ? Room.fromMap(json['channel']) : null;
-      success = json['success'];
-    }
+  factory RoomNewResponse.fromMap(Map<String, dynamic> json) {
+    return RoomNewResponse(
+      roomId: json['room']['rid'],
+      success: json['success'],
+    );
   }
 
   Map<String, dynamic> toMap() => {
-        'room': room != null ? room!.toMap() : null,
+        'rid': roomId,
         'success': success,
       };
 
   @override
   String toString() {
-    return 'RoomNewResponse{room: $room, success: $success}';
+    return 'RoomNewResponse{roomId: $roomId, success: $success}';
   }
 
   @override
@@ -31,9 +29,9 @@ class RoomNewResponse {
       identical(this, other) ||
       other is RoomNewResponse &&
           runtimeType == other.runtimeType &&
-          room == other.room &&
+          roomId == other.roomId &&
           success == other.success;
 
   @override
-  int get hashCode => room.hashCode ^ success.hashCode;
+  int get hashCode => roomId.hashCode ^ success.hashCode;
 }
