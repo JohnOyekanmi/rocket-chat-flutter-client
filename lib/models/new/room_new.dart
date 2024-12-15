@@ -1,22 +1,18 @@
 class RoomNew {
-  String? username;
+  final String username;
 
   RoomNew({
-    this.username,
+    required this.username,
   });
 
-  RoomNew.fromMap(Map<String, dynamic>? json) {
-    if (json != null) {
-      username = json['username'];
-    }
+  factory RoomNew.fromMap(Map<String, dynamic> json) {
+    return RoomNew(username: json['username']);
   }
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {};
 
-    if (username != null) {
-      map['username'] = username;
-    }
+    map['username'] = username;
 
     return map;
   }

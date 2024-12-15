@@ -255,7 +255,7 @@ class RocketChatFlutterClient {
   /// Create a direct message room with the user.
   Future<Room> createDirectMessage(String username) async {
     try {
-      final room = await roomService.create(RoomNew(), auth!);
+      final room = await roomService.create(RoomNew(username: username), auth!);
       return room.room!;
     } on Exception catch (e, s) {
       _handleError('createDirectMessage', e, s);
