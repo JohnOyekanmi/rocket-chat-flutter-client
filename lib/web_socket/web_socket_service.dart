@@ -17,7 +17,6 @@ class WebSocketService {
         WebSocketChannel.connect(Uri.parse('$url/websocket'));
     await webSocketChannel.ready;
 
-
     webSocketChannel.stream.listen(
       onData,
       onError: onError,
@@ -64,7 +63,7 @@ class WebSocketService {
   void streamNotifyRoom(WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "sub",
-      "id": roomId + "subscription-id",
+      "id": roomId + "/subscription-id",
       "name": "stream-notify-room",
       // params[1] indicates the subscription is persistent and should continue receiving updates.
       "params": ["${roomId}/rooms-changed", true],
@@ -76,10 +75,23 @@ class WebSocketService {
   void streamNotifyUser(WebSocketChannel webSocketChannel, String userId) {
     Map msg = {
       "msg": "sub",
-      "id": userId + "subscription-id",
+      "id": userId + "/subscription-id",
       "name": "stream-notify-user",
       // params[1] indicates the subscription is persistent and should continue receiving updates.
       "params": ["${userId}/notification", true],
+    };
+
+    webSocketChannel.sink.add(jsonEncode(msg));
+  }
+
+  void streamSubscriptionChange(
+      WebSocketChannel webSocketChannel, String userId, String roomId) {
+    Map msg = {
+      "msg": "sub",
+      "id": roomId + "/subscription-id",
+      "name": "stream-notify-user",
+      // params[1] indicates the subscription is persistent and should continue receiving updates.
+      "params": [roomId + "/subscription-changed", true]
     };
 
     webSocketChannel.sink.add(jsonEncode(msg));
@@ -89,7 +101,7 @@ class WebSocketService {
       WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "sub",
-      "id": roomId + "typing-subscription-id",
+      "id": roomId + "/typing-subscription-id",
       "name": "stream-notify-room",
       // params[1] indicates the subscription is persistent and should continue receiving updates.
       "params": [roomId + "/typing", true]
@@ -112,7 +124,7 @@ class WebSocketService {
       WebSocketChannel webSocketChannel, String userId) {
     Map msg = {
       "msg": "sub",
-      "id": userId + "subscription-id",
+      "id": userId + "/subscription-id",
       "name": "stream-notify-user",
       "params": [userId + "/notification", false]
     };
@@ -124,7 +136,7 @@ class WebSocketService {
       WebSocketChannel webSocketChannel, String channelId) {
     Map msg = {
       "msg": "sub",
-      "id": channelId + "subscription-id",
+      "id": channelId + "/subscription-id",
       "name": "stream-room-messages",
       "params": [channelId, false]
     };
@@ -135,7 +147,7 @@ class WebSocketService {
       WebSocketChannel webSocketChannel, String channelId) {
     Map msg = {
       "msg": "unsub",
-      "id": channelId + "subscription-id",
+      "id": channelId + "/subscription-id",
     };
     webSocketChannel.sink.add(jsonEncode(msg));
   }
@@ -144,7 +156,7 @@ class WebSocketService {
       WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "sub",
-      "id": roomId + "subscription-id",
+      "id": roomId + "/subscription-id",
       "name": "stream-room-messages",
       "params": [roomId, true]
     };
@@ -155,7 +167,7 @@ class WebSocketService {
       WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {
       "msg": "unsub",
-      "id": roomId + "subscription-id",
+      "id": roomId + "/subscription-id",
     };
     webSocketChannel.sink.add(jsonEncode(msg));
   }

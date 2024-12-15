@@ -1,10 +1,12 @@
+import 'package:rocket_chat_flutter_client/models/room.dart';
 import 'package:rocket_chat_flutter_client/models/subscription_update.dart';
 
 class RoomChange {
   final RoomChangeType changeType;
+  final Room room;
   final SubscriptionUpdate subscriptionUpdate;
 
-  RoomChange(this.changeType, this.subscriptionUpdate);
+  RoomChange(this.changeType, this.room, this.subscriptionUpdate);
 }
 
 enum RoomChangeType {

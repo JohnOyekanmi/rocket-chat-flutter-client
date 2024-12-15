@@ -1,14 +1,12 @@
 class Response {
-  bool? success;
+  final bool success;
 
   Response({
-    this.success = false,
+    required this.success,
   });
 
-  Response.fromMap(Map<String, dynamic>? json) {
-    if (json != null) {
-      success = json['success'];
-    }
+  factory Response.fromMap(Map<String, dynamic> json) {
+    return Response(success: json['success']);
   }
 
   Map<String, dynamic> toMap() => {

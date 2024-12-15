@@ -65,6 +65,23 @@ class RoomService {
     throw RocketChatException(response.body);
   }
 
+  Future<bool> delete(String roomId, Authentication authentication) async {
+    http.Response response = await _httpService.post(
+      '/api/v1/im.delete',
+      jsonEncode({"roomId": roomId}),
+      authentication,
+    );
+
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && decoded['success'] == true) {
+      print('SERVER-RESPONSE: $decoded');
+      return Response.fromMap(decoded['succces']).success == true;
+    }
+
+    throw RocketChatException(response.body);
+  }
+
   Future<Room> getSingleRoom(
       String roomId, Authentication authentication) async {
     http.Response response = await _httpService.get(

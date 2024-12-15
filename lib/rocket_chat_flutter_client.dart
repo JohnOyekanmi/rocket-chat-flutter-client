@@ -40,12 +40,18 @@ class RocketChatFlutterClient {
   late RoomService roomService;
   late WebSocketChannel webSocketChannel;
   final WebSocketService webSocketService = WebSocketService();
-  final Map<String, StreamController<List<Message>>> _roomMessages = {};
-  // Map<roomId, subscriptionId>
-  final Map<String, String> _roomSubscriptions = {};
-  final Map<String, StreamController<Typing>> _roomTypings = {};
+
+  // Map<roomId, messagesSubscriptionId>
+  final Map<String, String> _roomDataSubscriptions = {};
+  // Map<roomId, messagesSubscriptionId>
+  final Map<String, String> _roomMessageSubscriptions = {};
   // Map<roomId, typingSubscriptionId>
   final Map<String, String> _roomTypingSubscriptions = {};
+
+  final Map<String, StreamController<RoomChange>> _roomData = {};
+  final Map<String, StreamController<List<Message>>> _roomMessages = {};
+  final Map<String, StreamController<Typing>> _roomTypings = {};
+
   final StreamController<RoomChange> _rooms = StreamController.broadcast();
 
   bool get _authObjectCreated => auth != null && auth!.data?.me != null;
@@ -180,7 +186,7 @@ class RocketChatFlutterClient {
     _scheduleReconnect();
   }
 
-  void _handleWebSocketMessage(Map<String, dynamic> message) {
+  void _handleWebSocketMessage(Map<String, dynamic> message) async {
     print('NEW MESSAGE IN!!!');
     try {
       print('WebSocket message: ${message['msg']}');
@@ -209,13 +215,37 @@ class RocketChatFlutterClient {
 
             final changeType = getRoomChangeType(message['fields']['args'][0]);
             final value = message['fields']['args'][1];
+            final roomId = value['rid'];
+
+            // fetch the room data.
+            final room = await getSingleRoom(roomId);
 
             final roomChange = RoomChange(
               changeType,
+              room,
               SubscriptionUpdate.fromMap(value),
             );
 
             _rooms.add(roomChange);
+          }
+
+          // -----> room data changes.
+          if (message['fields']['eventName'].endsWith('subscription-changed')) {
+            print('room data change detected!');
+
+            final value = message['fields']['args'][0];
+            final roomId = value['rid'];
+
+            // fetch the room data.
+            final _room = await getSingleRoom(roomId);
+
+            final roomChange = RoomChange(
+              RoomChangeType.updated,
+              _room,
+              SubscriptionUpdate.fromMap(value),
+            );
+
+            _roomData[roomId]?.add(roomChange);
           }
         }
 
@@ -264,11 +294,52 @@ class RocketChatFlutterClient {
     }
   }
 
+  /// Delete a direct-message (D) room.
+  Future<bool> deleteDirectMessage(String roomId) async {
+    try {
+      final deleted = await roomService.delete(roomId, auth!);
+      return deleted;
+    } on Exception catch (e, s) {
+      _handleError('deleteDirectMessage', e, s);
+      rethrow;
+    }
+  }
+
+  /// Get the messages stream for a room.
+  Stream<RoomChange> getRoomDataStream(String roomId) {
+    _roomData[roomId] ??= StreamController<RoomChange>.broadcast();
+
+    if (!_roomDataSubscriptions.containsKey(roomId)) {
+      // subscribe to the room messages stream if the stream is not already subscribed.
+      // Use Future.microtask to avoid synchronous subscription
+      Future.microtask(() => _subscribeToRoomData(roomId));
+
+      print(
+        '[getRoomDataStream]: subscribed to room data stream for room $roomId',
+      );
+    }
+
+    return _roomData[roomId]!.stream;
+  }
+
+  void _subscribeToRoomData(String roomId) {
+    if (_roomDataSubscriptions.keys.contains(roomId)) {
+      print('Already subscribed to room data: $roomId');
+      return;
+    }
+
+    webSocketService.streamRoomMessagesSubscribe(webSocketChannel, roomId);
+
+    // add the subscription id to the map.
+    _roomDataSubscriptions[roomId] = roomId + "/subscription-id";
+    print('subscribed to room data stream for room $roomId');
+  }
+
   /// Get the messages stream for a room.
   Stream<List<Message>> getMessagesStream(String roomId) {
     _roomMessages[roomId] ??= StreamController<List<Message>>.broadcast();
 
-    if (!_roomSubscriptions.containsKey(roomId)) {
+    if (!_roomMessageSubscriptions.containsKey(roomId)) {
       // subscribe to the room messages stream if the stream is not already subscribed.
       // Use Future.microtask to avoid synchronous subscription
       Future.microtask(() => _subscribeToRoomMessages(roomId));
@@ -282,7 +353,7 @@ class RocketChatFlutterClient {
   }
 
   void _subscribeToRoomMessages(String roomId) {
-    if (_roomSubscriptions.keys.contains(roomId)) {
+    if (_roomMessageSubscriptions.keys.contains(roomId)) {
       print('Already subscribed to room messages: $roomId');
       return;
     }
@@ -290,7 +361,7 @@ class RocketChatFlutterClient {
     webSocketService.streamRoomMessagesSubscribe(webSocketChannel, roomId);
 
     // add the subscription id to the map.
-    _roomSubscriptions[roomId] = roomId + "subscription-id";
+    _roomMessageSubscriptions[roomId] = roomId + "/subscription-id";
     print('subscribed to room messages stream for room $roomId');
 
     // fetch initial messages.
@@ -313,7 +384,7 @@ class RocketChatFlutterClient {
   void closeMessagesStream(String roomId) {
     _roomMessages[roomId]?.close();
     _roomMessages.remove(roomId);
-    _roomSubscriptions.remove(roomId);
+    _roomMessageSubscriptions.remove(roomId);
   }
 
   /// Get the typing stream for a room.
@@ -342,7 +413,7 @@ class RocketChatFlutterClient {
     webSocketService.streamNotifyRoomTyping(webSocketChannel, roomId);
 
     // add the subscription id to the map.
-    _roomTypingSubscriptions[roomId] = roomId + "typing-subscription-id";
+    _roomTypingSubscriptions[roomId] = roomId + "/typing-subscription-id";
     print('subscribed to room typing stream for room $roomId');
   }
 
@@ -366,9 +437,10 @@ class RocketChatFlutterClient {
   /// Get the rooms stream.
   Stream<RoomChange> getRoomsStream() {
     // fetch initial messages.
-    roomService.getSubscriptions(auth!).then((subscriptions) {
+    roomService.getSubscriptions(auth!).then((subscriptions) async {
       for (var subscription in subscriptions) {
-        _rooms.add(RoomChange(RoomChangeType.added, subscription));
+        final room = await getSingleRoom(subscription.rid!);
+        _rooms.add(RoomChange(RoomChangeType.added, room, subscription));
       }
     });
 
@@ -505,6 +577,7 @@ class RocketChatFlutterClient {
   void dispose() {
     _reconnectTimer?.cancel();
     webSocketChannel.sink.close();
+    _roomData.values.forEach((controller) => controller.close());
     _roomMessages.values.forEach((controller) => controller.close());
     _roomTypings.values.forEach((controller) => controller.close());
     _rooms.close();

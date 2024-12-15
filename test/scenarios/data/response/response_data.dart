@@ -11,7 +11,7 @@ class ResponseData {
   }
 
   static Response getById(int responseId) {
-    return Response.fromMap(ResponseData.responseList[responseId]);
+    return Response.fromMap(ResponseData.responseList[responseId]!);
   }
 
   static List<Response> getMessageList() {
