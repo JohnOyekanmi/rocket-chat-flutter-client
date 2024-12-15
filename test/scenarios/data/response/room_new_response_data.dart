@@ -18,7 +18,7 @@ class RoomNewResponseData {
 
   static RoomNewResponse getById(int roomNewResponseId) {
     return RoomNewResponse.fromMap(
-        RoomNewResponseData.roomNewResponseList[roomNewResponseId]);
+        RoomNewResponseData.roomNewResponseList[roomNewResponseId]!);
   }
 
   static List<RoomNewResponse> getMessageList() {

@@ -10,7 +10,7 @@ class RoomNewData {
   }
 
   static RoomNew getById(int channelId) {
-    return RoomNew.fromMap(RoomNewData.roomNewList[channelId]);
+    return RoomNew.fromMap(RoomNewData.roomNewList[channelId]!);
   }
 
   static List<RoomNew> getRoomNewList() {
