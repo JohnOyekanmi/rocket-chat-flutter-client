@@ -215,11 +215,11 @@ class RocketChatFlutterClient {
         if (message['id'].endsWith('/rooms.get')) {
           print('Rooms: ${message['result']}');
 
-          final _updates = message['result'];
+          final List<dynamic> _updates = message['result'];
 
           print('Room Updates: $_updates');
           // update the rooms list.
-          _rooms.add(_updates.map((r) => Room.fromMap(r)).toList());
+          _rooms.add(_updates.map<Room>((r) => Room.fromMap(r)).toList());
         }
       }
 
@@ -397,16 +397,6 @@ class RocketChatFlutterClient {
     });
   }
 
-  /// Mark a message as read.
-  Future<bool> markMessageAsRead(String roomId) async {
-    try {
-      return await roomService.markAsRead(roomId, auth!);
-    } on Exception catch (e, s) {
-      _handleError('markMessageAsRead', e, s);
-      rethrow;
-    }
-  }
-
   /// Close the messages stream for a room.
   void closeMessagesStream(String roomId) {
     _roomMessages[roomId]?.close();
@@ -516,7 +506,8 @@ class RocketChatFlutterClient {
   }
 
   void _peroidicFetchRooms() {
-    _fetchRoomsTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _fetchRoomsTimer =
+        Timer.periodic(const Duration(milliseconds: 2400), (timer) {
       webSocketService.getRoomsRealtime(webSocketChannel);
     });
   }
@@ -539,6 +530,16 @@ class RocketChatFlutterClient {
   /// Send a typing status to the room.
   void sendTyping(String roomId, String userId, [bool isTyping = true]) {
     webSocketService.sendUserTyping(webSocketChannel, roomId, userId, isTyping);
+  }
+
+  /// Mark a message as read.
+  Future<bool> markRoomAsRead(String roomId) async {
+    try {
+      return await roomService.markAsRead(roomId, auth!);
+    } on Exception catch (e, s) {
+      _handleError('markRoomAsRead', e, s);
+      rethrow;
+    }
   }
 
   // /// Send a message to the room.

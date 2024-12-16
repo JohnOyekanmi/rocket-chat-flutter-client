@@ -127,7 +127,7 @@ class RoomService {
     final decoded = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return Response.fromMap(decoded['update']).success == true;
+      return Response.fromMap(decoded).success == true;
     }
     throw RocketChatException(response.body);
   }
@@ -143,7 +143,7 @@ class RoomService {
     final decoded = jsonDecode(response.body);
 
     if (response.statusCode == 200 && decoded['success'] == true) {
-      return RoomMessages.fromMap(decoded['update']);
+      return RoomMessages.fromMap(decoded);
     }
     throw RocketChatException(response.body);
   }
@@ -159,7 +159,7 @@ class RoomService {
     final decoded = jsonDecode(response.body);
 
     if (response.statusCode == 200 && decoded['success'] == true) {
-      return RoomCounters.fromMap(decoded['update']);
+      return RoomCounters.fromMap(decoded);
     }
     throw RocketChatException(response.body);
   }
