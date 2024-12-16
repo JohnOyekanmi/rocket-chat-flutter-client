@@ -76,7 +76,7 @@ class RoomService {
 
     if (response.statusCode == 200 && decoded['success'] == true) {
       print('SERVER-RESPONSE: $decoded');
-      return Response.fromMap(decoded['succces']).success == true;
+      return Response.fromMap(decoded).success == true;
     }
 
     throw RocketChatException(response.body);
