@@ -97,6 +97,16 @@ class WebSocketService {
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
+  void getRoomsRealtime(WebSocketChannel webSocketChannel) {
+    Map msg = {
+      "msg": "method",
+      "method": "rooms/get",
+      "id": "${DateTime.now().millisecondsSinceEpoch}/rooms.get",
+    };
+
+    webSocketChannel.sink.add(jsonEncode(msg));
+  }
+
   void streamNotifyRoomTyping(
       WebSocketChannel webSocketChannel, String roomId) {
     Map msg = {

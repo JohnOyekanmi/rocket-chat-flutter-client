@@ -19,6 +19,13 @@ RoomChangeType getRoomChangeType(String changeType) {
   return RoomChangeType.values.firstWhere((e) => e.name == changeType);
 }
 
+class ClassicRoomChange {
+  final RoomChangeType changeType;
+  final Room room;
+
+  ClassicRoomChange(this.changeType, this.room);
+}
+
 // switch (changeType) {
 //             case RoomChangeType.updated:
 //               print('room with id ${value['id']} updated!');

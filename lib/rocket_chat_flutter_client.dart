@@ -52,13 +52,18 @@ class RocketChatFlutterClient {
   final Map<String, StreamController<List<Message>>> _roomMessages = {};
   final Map<String, StreamController<Typing>> _roomTypings = {};
 
-  final StreamController<RoomChange> _rooms = StreamController.broadcast();
+  // final StreamController<RoomChange> _rooms = StreamController.broadcast();
+  final StreamController<ClassicRoomChange> _rooms =
+      StreamController.broadcast();
+
+  Timer? _fetchRoomsTimer;
 
   bool get _authObjectCreated => auth != null && auth!.data?.me != null;
 
   // Add these new properties for reconnection handling
   bool _isConnected = false;
   Timer? _reconnectTimer;
+
   static const int _maxReconnectAttempts = 5;
   int _reconnectAttempts = 0;
 
@@ -202,6 +207,33 @@ class RocketChatFlutterClient {
       //   print('Subscription message: ${message['name']}');
       // }
 
+      if (message['msg'] == 'result') {
+        print('Result: ${message['result']}');
+
+        // ---> update to the rooms list.
+        if (message['id'].endsWith('/rooms.get')) {
+          print('Rooms: ${message['result']}');
+
+          final updatedRooms = message['result']['update'];
+          final removedRooms = message['result']['remove'];
+
+          print('Updated rooms: $updatedRooms');
+          print('Removed rooms: $removedRooms');
+
+          // update the rooms list.
+          for (int u = 0; u < updatedRooms.length; u++) {
+            final room = Room.fromMap(updatedRooms[u]);
+            _rooms.add(ClassicRoomChange(RoomChangeType.updated, room));
+          }
+
+          // remove the rooms from the rooms list.
+          for (int r = 0; r < removedRooms.length; r++) {
+            final roomId = removedRooms[r];
+            _rooms.add(ClassicRoomChange(RoomChangeType.removed, roomId));
+          }
+        }
+      }
+
       if (message['msg'] == 'changed') {
         //handle changes and updates in the room.
 
@@ -209,25 +241,25 @@ class RocketChatFlutterClient {
         if (message['collection'] == 'stream-notify-user') {
           print('collection: is ${message['collection']}');
 
-          // ---> rooms list changes.
-          if (message['fields']['eventName'].endsWith('rooms-changed')) {
-            print('rooms list change detected!');
+          // // ---> rooms list changes.
+          // if (message['fields']['eventName'].endsWith('rooms-changed')) {
+          //   print('rooms list change detected!');
 
-            final changeType = getRoomChangeType(message['fields']['args'][0]);
-            final value = message['fields']['args'][1];
-            final roomId = value['rid'];
+          //   final changeType = getRoomChangeType(message['fields']['args'][0]);
+          //   final value = message['fields']['args'][1];
+          //   final roomId = value['rid'];
 
-            // fetch the room data.
-            final room = await getSingleRoom(roomId);
+          //   // fetch the room data.
+          //   final room = await getSingleRoom(roomId);
 
-            final roomChange = RoomChange(
-              changeType,
-              room,
-              SubscriptionUpdate.fromMap(value),
-            );
+          //   final roomChange = RoomChange(
+          //     changeType,
+          //     room,
+          //     SubscriptionUpdate.fromMap(value),
+          //   );
 
-            _rooms.add(roomChange);
-          }
+          //   _rooms.add(roomChange);
+          // }
 
           // -----> room data changes.
           if (message['fields']['eventName'].endsWith('subscription-changed')) {
@@ -452,33 +484,61 @@ class RocketChatFlutterClient {
     }
   }
 
-  /// Get the rooms stream.
-  Stream<RoomChange> getRoomsStream() {
-    // fetch initial messages.
-    roomService.getSubscriptions(auth!).then((subscriptions) async {
-      for (int i = 0; i < subscriptions.length; i++) {
-        final subscription = subscriptions[i];
-        final room = await getSingleRoom(subscription.rid!);
+  // /// Get the rooms stream.
+  // Stream<RoomChange> getRoomsStream() {
+  //   // fetch initial messages.
+  //   roomService.getSubscriptions(auth!).then((subscriptions) async {
+  //     for (int i = 0; i < subscriptions.length; i++) {
+  //       final subscription = subscriptions[i];
+  //       final room = await getSingleRoom(subscription.rid!);
 
-        print('subscription from getRoomsStream: ${subscription.rid}');
+  //       print('subscription from getRoomsStream: ${subscription.rid}');
+  //       print('room from getRoomsStream: ${room.id}');
+  //       print('\n\nROOM: no. $i\n\n');
+  //       _rooms.add(RoomChange(
+  //         RoomChangeType.added,
+  //         room,
+  //         subscription,
+  //       ));
+  //       _roomData[room.id!]?.add(RoomChange(
+  //         RoomChangeType.added,
+  //         room,
+  //         subscription,
+  //       ));
+  //       _roomDataSubscriptions[room.id!] =
+  //           room.id! + "/subscription-changed-id";
+  //     }
+  //   });
+
+  //   return _rooms.stream;
+  // }
+
+  /// Get the rooms stream.
+  Stream<ClassicRoomChange> getRoomsStream() {
+    // fetch initial messages.
+    roomService.getRooms(auth!).then((rooms) async {
+      for (int i = 0; i < rooms.length; i++) {
+        final room = rooms[i];
+
         print('room from getRoomsStream: ${room.id}');
         print('\n\nROOM: no. $i\n\n');
-        _rooms.add(RoomChange(
+        _rooms.add(ClassicRoomChange(
           RoomChangeType.added,
           room,
-          subscription,
         ));
-        _roomData[room.id!]?.add(RoomChange(
-          RoomChangeType.added,
-          room,
-          subscription,
-        ));
-        _roomDataSubscriptions[room.id!] =
-            room.id! + "/subscription-changed-id";
       }
     });
 
+    // periodically fetch the rooms list.
+    _peroidicFetchRooms();
+
     return _rooms.stream;
+  }
+
+  void _peroidicFetchRooms() {
+    _fetchRoomsTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      webSocketService.getRoomsRealtime(webSocketChannel);
+    });
   }
 
   /// Get a list of rooms user belongs to.
@@ -610,6 +670,7 @@ class RocketChatFlutterClient {
   // Add cleanup method
   void dispose() {
     _reconnectTimer?.cancel();
+    _fetchRoomsTimer?.cancel();
     webSocketChannel.sink.close();
     _roomData.values.forEach((controller) => controller.close());
     _roomMessages.values.forEach((controller) => controller.close());
