@@ -109,12 +109,19 @@ class WebSocketService {
 
   void streamNotifyRoomTyping(
       WebSocketChannel webSocketChannel, String roomId) {
+    // Map msg = {
+    //   "msg": "sub",
+    //   "id": roomId + "/typing-subscription-id",
+    //   "name": "stream-notify-room",
+    //   // params[1] indicates the subscription is persistent and should continue receiving updates.
+    //   "params": [roomId + "/typing", true]
+    // };
+
     Map msg = {
       "msg": "sub",
       "id": roomId + "/typing-subscription-id",
       "name": "stream-notify-room",
-      // params[1] indicates the subscription is persistent and should continue receiving updates.
-      "params": [roomId + "/typing", true]
+      "params": ["${roomId}/user-activity", true]
     };
 
     webSocketChannel.sink.add(jsonEncode(msg));
@@ -223,17 +230,28 @@ class WebSocketService {
   }
 
   void sendUserTyping(
-      WebSocketChannel webSocketChannel, String roomId, String userId,
+      WebSocketChannel webSocketChannel, String roomId, String username,
       [bool isTyping = true]) {
+    // Map msg = {
+    //   "msg": "method",
+    //   "method": "stream-notify-room",
+    //   "id": roomId + "/typing-subscription-id",
+    //   "params": [
+    //     "${roomId}/typing",
+    //     username,
+    //     isTyping,
+    //   ],
+    // };
     Map msg = {
       "msg": "method",
       "method": "stream-notify-room",
-      "id": "${roomId}/${userId}/typing",
+      "id": roomId + "/typing-subscription-id",
       "params": [
-        "${roomId}/typing",
-        userId,
-        isTyping,
-      ],
+        "${roomId}/user-activity",
+        username,
+        isTyping ? ["user-typing"] : [],
+        {}
+      ]
     };
 
     webSocketChannel.sink.add(jsonEncode(msg));

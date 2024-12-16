@@ -193,9 +193,10 @@ class RocketChatFlutterClient {
   }
 
   void _handleWebSocketMessage(Map<String, dynamic> message) async {
-    // print('NEW MESSAGE IN!!!');
+    print('NEW MESSAGE IN!!!');
     try {
-      // print('WebSocket message: ${message['msg']}');
+      print('WebSocket message: ${message['msg']}');
+      print('WebSocket message: ${message}');
 
       // handle keep alive messages.
       if (message['msg'] == 'ping') {
@@ -223,9 +224,8 @@ class RocketChatFlutterClient {
         }
       }
 
+      // handle changes and updates in the room.
       if (message['msg'] == 'changed') {
-        //handle changes and updates in the room.
-
         // STREAM-NOTIFY-USER
         if (message['collection'] == 'stream-notify-user') {
           print('collection: is ${message['collection']}');
@@ -274,15 +274,25 @@ class RocketChatFlutterClient {
         if (message['collection'] == 'stream-notify-room') {
           print('collection: is ${message['collection']}');
 
-          // ---> typing
-          if (message['fields']['eventName'].endsWith('typing')) {
-            print('typing detected!');
+          // {msg: changed, collection: stream-notify-room, id: id, fields: {eventName: 5Gv9sAptw6ahhuXa9DPb7pJcc5hn2HsczE/user-activity, args: [30000561, [], {}]}}
 
-            // extract the room id from the event name.
-            final roomId = message['fields']['eventName'].split('/')[0];
-            final value = message['fields']['args'];
+          // ---> user-activity
+          if (message['fields']['eventName'].endsWith('user-activity')) {
+            print('user-activity detected!');
 
-            _roomTypings[roomId]?.add(Typing.fromList(value));
+            // check if it is a typing event.
+            //
+            // ---> typing
+            if (message['fields']['args'][1].isNotEmpty &&
+                message['fields']['args'][1][0] == 'user-typing') {
+              print('typing detected!');
+
+              // extract the room id from the event name.
+              final roomId = message['fields']['eventName'].split('/')[0];
+              final value = message['fields']['args'];
+
+              _roomTypings[roomId]?.add(Typing.fromList(value));
+            }
           }
         }
 
@@ -507,7 +517,7 @@ class RocketChatFlutterClient {
 
   void _peroidicFetchRooms() {
     _fetchRoomsTimer =
-        Timer.periodic(const Duration(milliseconds: 2400), (timer) {
+        Timer.periodic(const Duration(milliseconds: 1850), (timer) {
       webSocketService.getRoomsRealtime(webSocketChannel);
     });
   }
@@ -528,8 +538,9 @@ class RocketChatFlutterClient {
   }
 
   /// Send a typing status to the room.
-  void sendTyping(String roomId, String userId, [bool isTyping = true]) {
-    webSocketService.sendUserTyping(webSocketChannel, roomId, userId, isTyping);
+  void sendTyping(String roomId, String username, [bool isTyping = true]) {
+    webSocketService.sendUserTyping(
+        webSocketChannel, roomId, username, isTyping);
   }
 
   /// Mark a message as read.

@@ -10,7 +10,7 @@ class Typing {
   factory Typing.fromList(List<dynamic> data) {
     return Typing(
       username: data[0] as String,
-      isTyping: data[1] as bool,
+      isTyping: data[1].isNotEmpty && data[1][0] == 'user-typing',
     );
   }
 
