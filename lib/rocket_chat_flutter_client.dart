@@ -199,7 +199,7 @@ class RocketChatFlutterClient {
 
       // handle keep alive messages.
       if (message['msg'] == 'ping') {
-        print('Keep alive!');
+        // print('Keep alive!');
         webSocketService.sendPong(webSocketChannel);
       }
 
@@ -209,7 +209,7 @@ class RocketChatFlutterClient {
       // }
 
       if (message['msg'] == 'result') {
-        print('Result: ${message['result']}');
+        // print('Result: ${message['result']}');
 
         // ---> update to the rooms list.
         if (message['id'].endsWith('/rooms.get')) {
