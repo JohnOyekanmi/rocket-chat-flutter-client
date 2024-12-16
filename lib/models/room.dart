@@ -37,30 +37,30 @@ class Room {
     this.lastMessage,
   });
 
-  Room.fromMap(Map<String, dynamic>? json) {
-    if (json != null) {
-      id = json['_id'];
-      rid = json['rid'];
-      updatedAt = json['_updatedAt'] != null
+  factory Room.fromMap(Map<String, dynamic> json) {
+    return Room(
+      id: json['_id'],
+      rid: json['rid'],
+      updatedAt: json['_updatedAt'] != null
           ? DateTime.parse(json['_updatedAt'])
-          : null;
-      t = json['t'];
-      msgs = json['msgs'];
-      ts = json['ts'] != null ? DateTime.parse(json['ts']) : null;
-      lm = json['lm'] != null ? DateTime.parse(json['lm']) : null;
-      topic = json['topic'];
-      usernames = json['usernames'] != null 
-          ? List<String>.from(json['usernames']) 
-          : null;
+          : null,
+      t: json['t'],
+      msgs: json['msgs'],
+      ts: json['ts'] != null ? DateTime.parse(json['ts']) : null,
+      lm: json['lm'] != null ? DateTime.parse(json['lm']) : null,
+      topic: json['topic'],
+      usernames: json['usernames'] != null
+          ? List<String>.from(json['usernames'])
+          : null,
       // Added missing fields parsing
-      name = json['name'];
-      usersCount = json['usersCount'];
-      u = json['u'] != null ? User.fromMap(json['u']) : null;
-      isDefault = json['default'];
-      lastMessage = json['lastMessage'] != null 
-          ? Message.fromMap(json['lastMessage']) 
-          : null;
-    }
+      name: json['name'],
+      usersCount: json['usersCount'],
+      u: json['u'] != null ? User.fromMap(json['u']) : null,
+      isDefault: json['default'],
+      lastMessage: json['lastMessage'] != null
+          ? Message.fromMap(json['lastMessage'])
+          : null,
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -86,9 +86,9 @@ class Room {
   @override
   String toString() {
     return 'Room{id: $id, updatedAt: $updatedAt, t: $t, msgs: $msgs, ts: $ts, '
-           'lm: $lm, topic: $topic, rid: $rid, usernames: $usernames, '
-           'name: $name, usersCount: $usersCount, u: $u, '
-           'isDefault: $isDefault, lastMessage: $lastMessage}';
+        'lm: $lm, topic: $topic, rid: $rid, usernames: $usernames, '
+        'name: $name, usersCount: $usersCount, u: $u, '
+        'isDefault: $isDefault, lastMessage: $lastMessage}';
   }
 
   @override

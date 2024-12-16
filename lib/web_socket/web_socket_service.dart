@@ -84,11 +84,11 @@ class WebSocketService {
     webSocketChannel.sink.add(jsonEncode(msg));
   }
 
-  void streamSubscriptionChange(
+  void streamSubscriptionChanged(
       WebSocketChannel webSocketChannel, String userId, String roomId) {
     Map msg = {
       "msg": "sub",
-      "id": roomId + "/subscription-id",
+      "id": roomId + "/subscription-changed-id",
       "name": "stream-notify-user",
       // params[1] indicates the subscription is persistent and should continue receiving updates.
       "params": [roomId + "/subscription-changed", true]

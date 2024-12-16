@@ -35,7 +35,7 @@ class RoomData {
   }
 
   static Room getById(String roomId) {
-    return Room.fromMap(RoomData.roomList[roomId]);
+    return Room.fromMap(RoomData.roomList[roomId]!);
   }
 
   static List<Room> getRoomList() {

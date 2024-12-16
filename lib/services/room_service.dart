@@ -92,6 +92,7 @@ class RoomService {
     final decoded = jsonDecode(response.body);
 
     if (response.statusCode == 200 && decoded['success'] == true) {
+      print('SERVER-RESPONSE: $decoded');
       return Room.fromMap(decoded['room']);
     }
 

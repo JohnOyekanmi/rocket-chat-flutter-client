@@ -331,8 +331,14 @@ class RocketChatFlutterClient {
     webSocketService.streamRoomMessagesSubscribe(webSocketChannel, roomId);
 
     // add the subscription id to the map.
-    _roomDataSubscriptions[roomId] = roomId + "/subscription-id";
+    _roomDataSubscriptions[roomId] = roomId + "/subscription-changed-id";
     print('subscribed to room data stream for room $roomId');
+  }
+
+  void closeRoomDataStream(String roomId) {
+    _roomData[roomId]?.close();
+    _roomData.remove(roomId);
+    _roomDataSubscriptions.remove(roomId);
   }
 
   /// Get the messages stream for a room.
@@ -438,9 +444,25 @@ class RocketChatFlutterClient {
   Stream<RoomChange> getRoomsStream() {
     // fetch initial messages.
     roomService.getSubscriptions(auth!).then((subscriptions) async {
-      for (var subscription in subscriptions) {
+      for (int i = 0; i < subscriptions.length; i++) {
+        final subscription = subscriptions[i];
         final room = await getSingleRoom(subscription.rid!);
-        _rooms.add(RoomChange(RoomChangeType.added, room, subscription));
+
+        print('subscription from getRoomsStream: ${subscription.rid}');
+        print('room from getRoomsStream: ${room.id}');
+        print('\n\nROOM: no. $i\n\n');
+        _rooms.add(RoomChange(
+          RoomChangeType.added,
+          room,
+          subscription,
+        ));
+        _roomData[room.id!]?.add(RoomChange(
+          RoomChangeType.added,
+          room,
+          subscription,
+        ));
+        _roomDataSubscriptions[room.id!] =
+            room.id! + "/subscription-changed-id";
       }
     });
 
