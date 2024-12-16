@@ -517,7 +517,7 @@ class RocketChatFlutterClient {
 
   void _peroidicFetchRooms() {
     _fetchRoomsTimer =
-        Timer.periodic(const Duration(milliseconds: 1850), (timer) {
+        Timer.periodic(const Duration(milliseconds: 2400), (timer) {
       webSocketService.getRoomsRealtime(webSocketChannel);
     });
   }
