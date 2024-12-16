@@ -430,12 +430,24 @@ class RocketChatFlutterClient {
     _roomTypingSubscriptions.remove(roomId);
   }
 
+  /// Get a single room.
   Future<Room> getSingleRoom(String roomId) async {
     try {
       final room = await roomService.getSingleRoom(roomId, auth!);
       return room;
     } on Exception catch (e, s) {
       _handleError('getSingleRoom', e, s);
+      rethrow;
+    }
+  }
+
+  /// Get all subscriptions.
+  Future<List<SubscriptionUpdate>> getSubscriptions() async {
+    try {
+      final subscription = await roomService.getSubscriptions(auth!);
+      return subscription;
+    } on Exception catch (e, s) {
+      _handleError('getSubscriptions', e, s);
       rethrow;
     }
   }
