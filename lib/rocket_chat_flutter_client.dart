@@ -53,8 +53,9 @@ class RocketChatFlutterClient {
   final Map<String, StreamController<Typing>> _roomTypings = {};
 
   // final StreamController<RoomChange> _rooms = StreamController.broadcast();
-  final StreamController<ClassicRoomChange> _rooms =
-      StreamController.broadcast();
+  // final StreamController<ClassicRoomChange> _rooms =
+  //     StreamController.broadcast();
+  final StreamController<List<Room>> _rooms = StreamController.broadcast();
 
   Timer? _fetchRoomsTimer;
 
@@ -214,23 +215,11 @@ class RocketChatFlutterClient {
         if (message['id'].endsWith('/rooms.get')) {
           print('Rooms: ${message['result']}');
 
-          final updatedRooms = message['result']['update'];
-          final removedRooms = message['result']['remove'];
+          final _updates = message['result'];
 
-          print('Updated rooms: $updatedRooms');
-          print('Removed rooms: $removedRooms');
-
+          print('Room Updates: $_updates');
           // update the rooms list.
-          for (int u = 0; u < updatedRooms.length; u++) {
-            final room = Room.fromMap(updatedRooms[u]);
-            _rooms.add(ClassicRoomChange(RoomChangeType.updated, room));
-          }
-
-          // remove the rooms from the rooms list.
-          for (int r = 0; r < removedRooms.length; r++) {
-            final roomId = removedRooms[r];
-            _rooms.add(ClassicRoomChange(RoomChangeType.removed, roomId));
-          }
+          _rooms.add(_updates.map((r) => Room.fromMap(r)).toList());
         }
       }
 
@@ -514,19 +503,10 @@ class RocketChatFlutterClient {
   // }
 
   /// Get the rooms stream.
-  Stream<ClassicRoomChange> getRoomsStream() {
+  Stream<List<Room>> getRoomsStream() {
     // fetch initial messages.
     roomService.getRooms(auth!).then((rooms) async {
-      for (int i = 0; i < rooms.length; i++) {
-        final room = rooms[i];
-
-        print('room from getRoomsStream: ${room.id}');
-        print('\n\nROOM: no. $i\n\n');
-        _rooms.add(ClassicRoomChange(
-          RoomChangeType.added,
-          room,
-        ));
-      }
+      _rooms.add(rooms);
     });
 
     // periodically fetch the rooms list.
