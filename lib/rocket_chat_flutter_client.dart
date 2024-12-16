@@ -141,7 +141,7 @@ class RocketChatFlutterClient {
         webSocketUrl,
         auth!,
         (message) {
-          print('Raw-Message: $message');
+          // print('Raw-Message: $message');
           _handleWebSocketMessage(jsonDecode(message));
         },
         onError: (error, stackTrace) =>
@@ -193,9 +193,9 @@ class RocketChatFlutterClient {
   }
 
   void _handleWebSocketMessage(Map<String, dynamic> message) async {
-    print('NEW MESSAGE IN!!!');
+    // print('NEW MESSAGE IN!!!');
     try {
-      print('WebSocket message: ${message['msg']}');
+      // print('WebSocket message: ${message['msg']}');
 
       // handle keep alive messages.
       if (message['msg'] == 'ping') {
@@ -213,11 +213,11 @@ class RocketChatFlutterClient {
 
         // ---> update to the rooms list.
         if (message['id'].endsWith('/rooms.get')) {
-          print('Rooms: ${message['result']}');
+          // print('Rooms: ${message['result']}');
 
           final List<dynamic> _updates = message['result'];
 
-          print('Room Updates: $_updates');
+          // print('Room Updates: $_updates');
           // update the rooms list.
           _rooms.add(_updates.map<Room>((r) => Room.fromMap(r)).toList());
         }
