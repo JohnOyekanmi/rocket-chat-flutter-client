@@ -42,17 +42,28 @@ class Room {
       id: json['_id'],
       rid: json['rid'],
       updatedAt: json['_updatedAt'] != null
-          ? DateTime.parse(json['_updatedAt'])
+          ? (json['_updatedAt'] is Map &&
+                  json['_updatedAt'].containsKey('\$date')
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  json['_updatedAt']['\$date'])
+              : DateTime.parse(json['_updatedAt']))
           : null,
       t: json['t'],
       msgs: json['msgs'],
-      ts: json['ts'] != null ? DateTime.parse(json['ts']) : null,
-      lm: json['lm'] != null ? DateTime.parse(json['lm']) : null,
+      ts: json['ts'] != null
+          ? (json['ts'] is Map && json['ts'].containsKey('\$date')
+              ? DateTime.fromMillisecondsSinceEpoch(json['ts']['\$date'])
+              : DateTime.parse(json['ts']))
+          : null,
+      lm: json['lm'] != null
+          ? (json['lm'] is Map && json['lm'].containsKey('\$date')
+              ? DateTime.fromMillisecondsSinceEpoch(json['lm']['\$date'])
+              : DateTime.parse(json['lm']))
+          : null,
       topic: json['topic'],
       usernames: json['usernames'] != null
           ? List<String>.from(json['usernames'])
           : null,
-      // Added missing fields parsing
       name: json['name'],
       usersCount: json['usersCount'],
       u: json['u'] != null ? User.fromMap(json['u']) : null,
