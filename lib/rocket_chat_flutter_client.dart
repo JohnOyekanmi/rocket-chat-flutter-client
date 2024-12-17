@@ -193,10 +193,10 @@ class RocketChatFlutterClient {
   }
 
   void _handleWebSocketMessage(Map<String, dynamic> message) async {
-    print('NEW MESSAGE IN!!!');
+    // print('NEW MESSAGE IN!!!');
     try {
-      print('WebSocket message: ${message['msg']}');
-      print('WebSocket message: ${message}');
+      // print('WebSocket message: ${message['msg']}');
+      // print('WebSocket message: ${message}');
 
       // handle keep alive messages.
       if (message['msg'] == 'ping') {
@@ -252,7 +252,7 @@ class RocketChatFlutterClient {
 
           // -----> room data changes.
           if (message['fields']['eventName'].endsWith('subscription-changed')) {
-            print('room data change detected!');
+            // print('room data change detected!');
 
             final value = message['fields']['args'][0];
             final roomId = value['rid'];
@@ -272,20 +272,20 @@ class RocketChatFlutterClient {
 
         // STREAM-NOTIFY-ROOM
         if (message['collection'] == 'stream-notify-room') {
-          print('collection: is ${message['collection']}');
+          // print('collection: is ${message['collection']}');
 
           // {msg: changed, collection: stream-notify-room, id: id, fields: {eventName: 5Gv9sAptw6ahhuXa9DPb7pJcc5hn2HsczE/user-activity, args: [30000561, [], {}]}}
 
           // ---> user-activity
           if (message['fields']['eventName'].endsWith('user-activity')) {
-            print('user-activity detected!');
+            // print('user-activity detected!');
 
             // check if it is a typing event.
             //
             // ---> typing
             if (message['fields']['args'][1].isNotEmpty &&
                 message['fields']['args'][1][0] == 'user-typing') {
-              print('typing detected!');
+              // print('typing detected!');
 
               // extract the room id from the event name.
               final roomId = message['fields']['eventName'].split('/')[0];
@@ -298,7 +298,7 @@ class RocketChatFlutterClient {
 
         // STREAM-ROOM-MESSAGES
         if (message['collection'] == 'stream-room-messages') {
-          print('collection: is ${message['collection']}');
+          // print('collection: is ${message['collection']}');
 
           // ---> message
           final roomId = message['fields']['eventName'];
