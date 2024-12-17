@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:rocket_chat_flutter_client/models/message_attachment.dart';
 
 class MessageNew {
+  String? id;
   String? alias;
   String? avatar;
   String? emoji;
@@ -12,6 +13,7 @@ class MessageNew {
   List<MessageAttachment>? attachments;
 
   MessageNew({
+    this.id,
     this.alias,
     this.avatar,
     this.emoji,
@@ -22,6 +24,7 @@ class MessageNew {
 
   MessageNew.fromMap(Map<String, dynamic>? json) {
     if (json != null) {
+      id = json['_id'];
       alias = json['alias'];
       avatar = json['avatar'];
       emoji = json['emoji'];
@@ -44,6 +47,7 @@ class MessageNew {
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
+      '_id': id,
       'rid': roomId,
       'msg': message,
     };

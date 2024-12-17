@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:rocket_chat_flutter_client/models/authentication.dart';
 import 'package:rocket_chat_flutter_client/models/message.dart';
@@ -67,6 +68,17 @@ class RocketChatFlutterClient {
 
   static const int _maxReconnectAttempts = 5;
   int _reconnectAttempts = 0;
+
+  // Add set to track processed message IDs
+  final Set<String> _processedMessageIds = {};
+  
+  // Add message ID counter for tracking requests
+  int _messageId = 1;
+
+  // Add method to generate unique message IDs
+  String _generateUniqueId() {
+    return '${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(1000000)}';
+  }
 
   // Add reconnection method
   Future<void> _reconnect() async {
@@ -304,8 +316,26 @@ class RocketChatFlutterClient {
           final roomId = message['fields']['eventName'];
           final List<dynamic> value = message['fields']['args'];
 
-          _roomMessages[roomId]
-              ?.add(value.map((m) => Message.fromMap(m)).toList());
+          // Add duplicate detection using message ID
+          final messages = value.where((messageData) {
+            final messageId = messageData['_id'];
+            if (messageId != null) {
+              if (!_processedMessageIds.add(messageId)) {
+                // Message already processed, skip it
+                return false;
+              }
+
+              // Optional: Maintain a reasonable set size by removing old entries
+              if (_processedMessageIds.length > 1000) {
+                _processedMessageIds.clear();
+              }
+            }
+            return true;
+          }).map((m) => Message.fromMap(m)).toList();
+
+          if (messages.isNotEmpty) {
+            _roomMessages[roomId]?.add(messages);
+          }
         }
       }
     } on Exception catch (e, s) {
@@ -561,12 +591,21 @@ class RocketChatFlutterClient {
 
   /// Send a message to the room.
   void sendMessage(String roomId, String message) async {
+    final messageId = _generateUniqueId();
+    
     print('[CLIENT-REST]:sending message to room $roomId: $message');
     try {
       await messageService.sendMessage(
-        MessageNew(roomId: roomId, message: message),
+        MessageNew(
+          id: messageId,
+          roomId: roomId, 
+          message: message
+        ),
         auth!,
       );
+      
+      // Add message ID to processed set
+      _processedMessageIds.add(messageId);
     } on Exception catch (e, s) {
       _handleError('sendMessage', e, s);
       rethrow;
